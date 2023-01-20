@@ -12,6 +12,7 @@ revisionHistory:
     - Add Compiler Implementation Details documenting Lower Types pass
     - Define constant type modifier.
     - Remove stray language leftover from removing conditionally valid.
+    - Add reference types and related statements.
   # Information about the old versions.  This should be static.
   oldVersions:
     - version: 1.2.0
