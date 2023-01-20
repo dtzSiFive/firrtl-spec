@@ -244,9 +244,10 @@ Verilog to downstream tools.
 
 # Types
 
-FIRRTL has two classes of types: _ground_ types and _aggregate_ types.  Ground
-types are fundamental and are not composed of other types.  Aggregate types are
-composed of one or more aggregate or ground types.
+FIRRTL has three classes of types: _ground_ types, _aggregate_ types, and
+_reference_ types.  Ground types are fundamental and are not composed of other
+types.  Aggregate types are composed of one or more aggregate or ground types.
+Reference types are used for indirect access to circuit components.
 
 ## Ground Types
 
@@ -498,6 +499,70 @@ In a connection to `myport`{.firrtl}, the `a`{.firrtl} sub-field flows out of
 the module.  The `c`{.firrtl} sub-field contained in the `b`{.firrtl} sub-field
 flows into the module, and the `d`{.firrtl} sub-field contained in the
 `b`{.firrtl} sub-field flows out of the module.
+
+
+## Reference Types
+
+References can be exported from a module for indirect access elsewhere,
+and are captured using values of reference type.
+
+For use in cross-module references (XMR's), a reference to a read of the
+circuit component is used.  See [@sec:probes] for details.
+
+Using reference type ports, modules may export references for reading and
+forcing without routing wires out of the design.
+
+This is often useful for testing and verification, where reference types allow
+reads of the entities to be explicitly exported without hard-coding their place
+in the design.  Instead, by using references, a testbench module may express
+accesses to the internals which will resolve to the appropriate target language
+construct by the compiler (e.g., hierarchical reference).
+
+The exported references are a part of a module's interface, however they are
+not allowed to become ports or other hardware components, and even when mixed
+in inputs and output bundles for convenience and logical grouping, they will
+not appear in the target language.
+
+Reference types can only appear in a limited number of locations, and are
+unsupported unless explicitly indicated otherwise.
+They cannot be connected to or from.
+
+Reference ports are not expected to be synthesizable and must not appear
+anywhere in the compiled design.
+
+There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
+described below.  These are used for indirect access to `probe`{.firrtl} and
+`rwprobe`{.firrtl} components.
+
+### Probe Types
+
+Probe types are reference types used to access probe components.
+
+There are two probe types, `Probe`{.firrtl} and `RWProbe`{.firrtl}, which respectively refer to
+`probe`{.firrtl} and `rwprobe`{.firrtl} components (see [@sec:probes] for details).
+`RWProbe`{.firrtl} is a `Probe`{.firrtl} type, but not the other way around.
+
+Probe types are composed of the type of data that they refer to, and are always passive
+(as defined in [@sec:passive-types]) even when the probe components are not.
+
+Conceptually probe types are single-direction views of the probed data-flow point,
+with the entire type accessed together.
+
+Examples:
+
+```firrtl
+Probe<UInt> ; readable reference to unsigned integer with inferred width
+RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
+```
+
+All instances of probe types must be initialized with exactly once statement,
+either the origin probe declaration or by forwarding up the hierarchy.
+
+Probe types cannot contain probe types.
+
+<!-- #### Probe types on External Module Declarations -->
+Probe types may be specified as part of an external module (see
+[@sec:externally-defined-modules]), using syntax that is not yet defined.
 
 ## Passive Types
 
@@ -815,6 +880,8 @@ sub-element in the vector.
 
 Invalidating a component with a bundle type recursively invalidates each
 sub-element in the bundle.
+
+Invalidating a component with a reference type has no effect.
 
 ## Attaches
 
@@ -1506,12 +1573,154 @@ en <= Z_valid
 cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 ```
 
+## Probes
+
+Probes are used to capture and export references to a point in the circuit data flow.
+Read-only probes are created with `probe`{.firrtl} and probes that can be overridden
+are declared with the `rwprobe`{.firrtl} statement.
+Probe declarations specify the target reference to export to, which must be a compatible probe type
+(see [@sec:export-target-expressions] for details on export target expressions).
+For details of how to read and write through probe types, see [@sec:reading-probe-references;@sec:force].
+
+Consider this simple module that does not yet have a probe:
+
+```firrtl
+module Foo :
+  input x : UInt
+  output y : UInt
+
+  y <= x
+```
+
+This can be probed by adding a `Probe`{.firrtl} and connecting it between `x`{.firrtl} and `y`{.firrtl}:
+
+```firrtl
+module Foo :
+  input x : UInt
+  output y : UInt
+  output px : Probe<UInt>
+
+  probe p : UInt => px
+  p <= x
+  y <= p
+```
+
+This circuit is equivalent to the previous one, other than the probed data can
+be accessed indirectly above `Foo`{.firrtl} in the hierarchy.
+
+`rwprobe`{.firrtl} statements work the same way, with the corresponding
+exported reference being a `RWProbe`{.firrtl} type.
+
+The name of the probe is only significant for specifying the connections to and
+from and has no relation to the name used for the indirect reference.
+
+### Export target expressions
+
+Probe statements indicate where to export their reference (following the
+`=>`{.firrtl}), which must be a static expression (e.g., cannot contain a
+sub-access with a dynamically determined index) of a compatible reference type.
+
+For `Probe`{.firrtl} statements, this must be `probe`, but `RWProbe` is allowed
+to be exported or forwarded to both `rwprobe` and `probe` types with matching
+interior type.
+
+Exporting to a field within a bundle is allowed, for example:
+```firrtl
+module Foo:
+  input x : UInt
+  output y : {x: UInt, p: probe<UInt>}
+
+  probe p : UInt => y.p
+  p <= x
+  y.x <= p
+```
+
+### Probes and Passive Types
+
+While `Probe`{.firrtl} types must be passive, the type of the probe statement is not required to be.
+This makes it possible to insert a probe between two connected expressions,
+passive or not, using the same code:
+
+```firrtl
+module Foo :
+  input x : {a: UInt, flip b: UInt}
+  output y : {a: UInt, flip b: UInt}
+  output xp : Probe<{a: UInt, b: UInt}> ; passive
+
+  probe p : {a: UInt, flip b: UInt} => xp ; not passive
+  p <= x
+  y <= p
+```
+
+### Exporting References to Nested Declarations
+
+Nested declarations (see [@sec:nested-declarations]) may be exported:
+
+```firrtl
+module RefProducer :
+  input a : UInt
+  input en : UInt<1>
+  output thereg : Probe<UInt>
+
+  when en :
+    reg myreg : UInt, clk
+    myreg <= a
+    probe p : UInt => thereg
+    p <= myreg
+```
+
+### Forward
+
+To forward a probe-typed reference up the hierarchy, use the forward statement:
+
+```firrtl
+module Foo :
+  output p : Probe<UInt>
+  ; ...
+
+module Forward :
+  output p : Probe<UInt>
+
+  inst f of Foo
+  forward f.p => p
+```
+
+The forwarded expression and the export target must both be static expressions,
+and as with probe statements can export out from a block.
+
+### Reading References
+
+Probes are read using the `read(p)`{.firrtl} operation, see [@sec:read].
+
+### Force
+
+To override existing drivers for a `RWProbe`{.firrtl}, the `force`{.firrtl} statement is used.
+Force statements are simulation-only, and may be omitted otherwise.
+
+* `force(clock, condition, refDst, value)`{.firrtl}: always posedge clock
+* `force(condition, refDst, value)`{.firrtl}: initial
+
+Condition is checked in procedural block before the force.
+When placed under `when` blocks, condition is mixed in as with other statements
+(e.g., `assert`{.firrtl}).
+
+#### Force-Release
+
+posedge clock, force if condition, else release; negedge clock for release?
+
+`force_release(clock, condition, refDst, value)`{.firrtl}
+
+TODO: release
+
+TODO: deposit, even if not standard?
+
 # Expressions
 
 FIRRTL expressions are used for creating literal unsigned and signed integers,
-for referring to a declared circuit component, for statically and dynamically
-accessing a nested element within a component, for creating multiplexers, and
-for performing primitive operations.
+for referring to a declared circuit component, for
+statically and dynamically accessing a nested element within a component, for
+creating multiplexers, for performing primitive operations, and for reading
+a remote reference to a probe.
 
 ## Unsigned Integers
 
@@ -1615,8 +1824,8 @@ width smaller than the number of bits required to represent the string's value.
 ## References
 
 A reference is simply a name that refers to a previously declared circuit
-component. It may refer to a module port, node, wire, register, instance, or
-memory.
+component. It may refer to a module port, node, wire, register, instance,
+memory, or probe.
 
 The following example connects a reference expression `in`{.firrtl}, referring
 to the previously declared port `in`{.firrtl}, to the reference expression
@@ -1838,6 +2047,42 @@ asClock(x)
 
 [@sec:primitive-operations] will describe the format and semantics of each
 primitive operation.
+
+## Reading Probe References
+
+Probes are read using the `read` operation.  This reads the entire probed type together.
+
+Read expressions have source flow and can be connected to other components:
+
+```firrtl
+module Foo :
+  output p : probe<UInt>
+  ; ...
+
+module Bar :
+  output x : UInt
+
+  inst f of Foo
+  x <= read(f.p) ; indirectly access the probed data
+```
+
+Indexing into a probed value is done after a complete read of the type:
+
+```firrtl
+module Foo :
+  output p : probe<{a: UInt, b: UInt}>
+  ; ...
+
+module Bar :
+  output x : UInt
+
+  inst f of Foo
+  x <= read(f.p).b ; indirectly access the probed data
+```
+
+The entire access may require use of a new wire or circuit component for storage
+when indexing into certain types.
+
 
 # Primitive Operations {#sec:primitive-operations}
 
@@ -2131,7 +2376,7 @@ the expression. Every expression is classified as either *source*, *sink*, or
 The flow of a reference to a declared circuit component depends on the kind of
 circuit component. A reference to an input port, an instance, a memory, and a
 node, is a source. A reference to an output port is a sink. A reference to a
-wire or register is duplex.
+wire, register, or probe is duplex.
 
 The flow of a sub-index or sub-access expression is the flow of the vector-typed
 expression it indexes or accesses.
@@ -2648,8 +2893,9 @@ type_ground = "Clock" | "Reset" | "AsyncReset"
             | ( "UInt" | "SInt" | "Analog" ) , [ width ] ;
 type_aggregate = "{" , field , { field } , "}"
                | type , "[" , int , "]" ;
+type_ref = ( "Probe" | "RWProbe" ) , "<", type , ">" ;
 field = [ "flip" ] , id , ":" , type ;
-type = type_ground | type_aggregate ;
+type = type_ground | type_aggregate | type_ref ;
 
 (* Primitive operations *)
 primop_2expr_keyword =
@@ -2680,6 +2926,7 @@ expr =
     ( "UInt" | "SInt" ) , [ width ] , "(" , ( int ) , ")"
   | reference
   | "mux" , "(" , expr , "," , expr , "," , expr , ")"
+  | "read" , "(" , reference , ")"
   | primop ;
 reference = id
           | reference , "." , id
@@ -2715,7 +2962,11 @@ statement = "wire" , id , ":" , type , [ info ]
           | "stop(" , expr , "," , expr , "," , int , ")" , [ info ]
           | "printf(" , expr , "," , expr , "," , string ,
             { expr } , ")" , [ ":" , id ] , [ info ]
-          | "skip" , [ info ] ;
+          | "skip" , [ info ] 
+          | "probe" , id , ":" , type , "=>", reference 
+          | "rwprobe" , id , ":" , type , "=>", reference ;
+          | "forward" , reference , "=>", reference ;
+(* TODO: force/etc.)
 
 (* Module definitions *)
 port = ( "input" | "output" ) , id , ":": , type , [ info ] ;
