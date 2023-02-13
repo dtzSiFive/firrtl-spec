@@ -153,7 +153,9 @@
         <DetectChar char="&lt;" attribute="Operator" context="#stay"/>
         <keyword String="types" attribute="Keyword" context="type"/>
         <DetectChar char="{" context="field" attribute="Separator"/>
-        <DetectChar char="&gt;" attribute="Operator" context="#pop"/>
+        <DetectChar char="}" attribute="Separator" context="#stay"/>
+        <DetectChar char= ";" context="comment" attribute="Comment"/>
+        <AnyChar String="&gt;" attribute="Operator" context="#pop"/>
       </context>
       <context name="type" attribute="String" lineEndContext="#pop">
         <AnyChar String="&lt;[(" attribute="Operator" context="widthOrDepthOrLit"/>
@@ -161,6 +163,7 @@
         <AnyChar String="}" attribute="Separator" context="#pop#pop"/>
         <DetectChar char= ";" context="comment" attribute="Comment"/>
         <Detect2Chars char="=" char1="&gt;" attribute="Operator" context="#pop"/>
+        <AnyChar String="&gt;" attribute="Operator" context="#pop"/>
       </context>
       <context name="widthOrDepthOrLit" attribute="String" lineEndContext="#stay">
         <DetectChar char="&lt;" attribute="Operator" context="widthOrDepthOrLit"/>
@@ -169,6 +172,7 @@
       <context name="field" attribute="ID" lineEndContext="#stay">
         <StringDetect String="flip" attribute="Keyword" context="#stay"/>
         <keyword String="types" attribute="Keyword" context="type"/>
+        <keyword String="outertype" attribute="Keyword" context="outertype"/>
         <DetectChar char="{" attribute="Separator" context="field"/>
         <DetectChar char="}" attribute="Separator" context="#pop"/>
         <AnyChar String=":," attribute="Separator" context="#stay"/>
