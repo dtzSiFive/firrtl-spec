@@ -556,7 +556,7 @@ Probe<UInt> ; readable reference to unsigned integer with inferred width
 RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 ```
 
-All instances of probe types must be initialized with exactly once statement,
+All instances of probe types must be initialized with exactly one statement,
 either the origin probe declaration or by forwarding up the hierarchy.
 
 Probe types cannot contain probe types.
