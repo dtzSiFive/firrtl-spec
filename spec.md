@@ -506,7 +506,7 @@ flows into the module, and the `d`{.firrtl} sub-field contained in the
 References can be exported from a module for indirect access elsewhere,
 and are captured using values of reference type.
 
-For use in cross-module references (XMR's), a reference to a read of the
+For use in cross-module references (XMR's), a reference to a probe of the
 circuit component is used.  See [@sec:probes] for details.
 
 Using reference type ports, modules may export references for reading and
@@ -518,7 +518,8 @@ in the design.  Instead, by using references, a testbench module may express
 accesses to the internals which will resolve to the appropriate target language
 construct by the compiler (e.g., hierarchical reference).
 
-The exported references are a part of a module's interface, however they are
+<!--
+The exported references are part of a module's interface, however they are
 not allowed to become ports or other hardware components, and even when mixed
 in input and output bundles for convenience and logical grouping, they will
 not appear in the target language.
@@ -526,9 +527,10 @@ not appear in the target language.
 Reference types can only appear in a limited number of locations, and are
 unsupported unless explicitly indicated otherwise.
 They cannot be connected to or from.
+-->
 
-Reference ports are not expected to be synthesizable and must not appear
-anywhere in the compiled design.
+Reference ports are not expected to be synthesizable and are expected to be absent
+from the signature of the modules in the compiled design.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
 described below.  These are used for indirect access to `probe`{.firrtl} and
