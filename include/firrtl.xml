@@ -28,6 +28,7 @@
       <item>Reset</item>
       <item>AsyncReset</item>
     </list>
+    <!-- TODO: Rework this to reflect latest changes, and less hacky later on -->
     <list name="outertype">
       <item>Probe</item>
       <item>RWProbe</item>

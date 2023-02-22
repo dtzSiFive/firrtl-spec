@@ -518,38 +518,33 @@ in the design.  Instead, by using references, a testbench module may express
 accesses to the internals which will resolve to the appropriate target language
 construct by the compiler (e.g., hierarchical reference).
 
-<!--
-The exported references are part of a module's interface, however they are
-not allowed to become ports or other hardware components, and even when mixed
-in input and output bundles for convenience and logical grouping, they will
-not appear in the target language.
-
-Reference types can only appear in a limited number of locations, and are
-unsupported unless explicitly indicated otherwise.
-They cannot be connected to or from.
--->
-
-Reference ports are not expected to be synthesizable and are expected to be absent
-from the signature of the modules in the compiled design.
+Reference ports are not expected to be synthesizable or representable in the
+target language and may be omitted in the compiled design.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
-described below.  These are used for indirect access to `probe`{.firrtl} and
-`rwprobe`{.firrtl} components.
+described below.  These are used for indirect access to passive access to the
+data underlying circuit constructs they originate from.
+`Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
+`force`{.firrtl} and other statements.
+Prefer the former as much as possible, as read-only probes impose fewer
+limitations and are more amenable to optimization.
+
+References must always be able to be statically traced to their target, or to
+an external module's output reference.
 
 ### Probe Types
 
-Probe types are reference types used to access probe components.
+Probe types are reference types used to access circuit elements' data remotely.
 
-There are two probe types, `Probe`{.firrtl} and `RWProbe`{.firrtl}, which
-respectively refer to `probe`{.firrtl} and `rwprobe`{.firrtl} components (see
-[@sec:probes] for details).  `RWProbe`{.firrtl} is a `Probe`{.firrtl} type, but
-not the other way around.
+There are two probe types: `Probe`{.firrtl} and `RWProbe`{.firrtl}.
+`RWProbe`{.firrtl} is a `Probe`{.firrtl} type, but not the other way around.
 
-Probe types are composed of the type of data that they refer to, and are always passive
-(as defined in [@sec:passive-types]) even when the probe components are not.
+Probe types are composed of the type of data that they refer to, which is
+always passive (as defined in [@sec:passive-types]) even when the probed target
+is not (see [@sec:probes-and-passive-types]).
+Probe types cannot contain probe types.
 
-Conceptually probe types are single-direction views of the probed data-flow point,
-with the entire type accessed together.
+Conceptually probe types are single-direction views of the probed data-flow point.
 
 Examples:
 
@@ -558,17 +553,94 @@ Probe<UInt> ; readable reference to unsigned integer with inferred width
 RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 ```
 
-All instances of probe types must be initialized with exactly one statement,
-either the origin probe declaration or by forwarding up the hierarchy.
+For details of how to read and write through probe types, see
+[@sec:reading-probe-references;@sec:force-and-release].
 
-Probe types cannot contain probe types.
+All instances of probe types must be initialized with exactly one statement:
+by forwarding an existing probe reference ([@sec:forward]), or as part of the declaration of
+a wire, node, memory, or register ([@sec:probes]).
 
-Probe types are only valid as module ports or within module ports
-and must be oriented as if they were output ports.
+Probe types are only allowed as part of module ports and may not appear
+anywhere else.
 
-<!-- #### Probe types on External Module Declarations -->
+Probes within vectors must be accessed using statically known index values.
+
 Probe types may be specified as part of an external module (see
-[@sec:externally-defined-modules]), using syntax that is not yet defined.
+[@sec:externally-defined-modules]), with the resolved referent
+optionally specified using implementation-specific syntax.
+
+
+### Input References
+
+Input probe references are not disallowed, but they should be used with care:
+when probe references are resolved they must target a single element at or
+below the resolution point.
+Support for other scenarios are allowed as determined by the implementation.
+
+
+Input references are not allowed on public-facing modules:
+e.g., the top module and external modules.
+
+#### U-Turn Example
+
+
+```firrtl
+module UTurn:
+  input in : Probe<UInt>
+  output out : Probe<UInt>
+  forward in => out
+
+module RefBouncing:
+  input x: UInt
+  output y: UInt
+
+  inst u1 of UTurn
+  inst u2 of UTurn
+
+  node n = x, probe => u1.in
+  forward u1.out => u2.in
+
+  out <= read(u2.out) ; = x
+```
+
+In the above example, the probe of node `n`{.firrtl} is routed through two
+modules before its resolution.
+
+#### IO with references to endpoint data
+
+```firrtl
+module Consumer:
+  input in : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
+  ; ...
+  node n = in.a, probe => in.cref
+
+module Producer:
+  output out : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
+  wire x : UInt, probe => out.pref
+  ; ...
+  out.a <= x
+
+module Connect:
+  output out : {x: Probe<UInt>, y: Probe<UInt>}
+
+  inst a of A
+  inst b of B
+
+  ; A => B
+  a.in.a <= b.out.a
+  forward b.out.pref => a.in.pref
+  forward a.in.cref => b.out.cref
+
+  ; Send references out
+  forward b.out.pref => out.pref
+  forward a.in.cref => out.cref
+
+module Top:
+  inst c of Connect
+
+  node producer_debug = read(c.pref);
+  node consumer_debug = read(c.cref);
+```
 
 ## Passive Types
 
@@ -652,6 +724,9 @@ narrower ground type component will have its value automatically truncated to
 fit the smaller bit width. The behavior of connect statements between two
 circuit components with aggregate types is defined by the connection algorithm
 in [@sec:the-connection-algorithm].
+
+Analog and Reference types cannot appear on or within either side of connect
+statements.
 
 ### The Connection Algorithm
 
@@ -786,6 +861,17 @@ The following example demonstrates instantiating a wire with the given name
 wire mywire: UInt
 ```
 
+Wires may optionally export a probe reference to their contents:
+
+``` firrtl
+module MyModule :
+  output myref : Probe<UInt<1>>
+
+  wire mywire: UInt<1>, probe => myref
+```
+
+See [@sec:probe-types] for more information on probes and reference types.
+
 ## Registers
 
 A register is a named stateful circuit component.  Reads from a register return
@@ -828,6 +914,18 @@ reg myreg: SInt, myclock with: (reset => (myreset, myinit))
 
 A register is initialized with an indeterminate value (see
 [@sec:indeterminate-values]).
+
+Registers may optionally export a probe reference to their contents:
+
+``` firrtl
+module MyModule :
+  input clock: Clock
+  output myref : Probe<UInt<1>>
+
+  reg myreg : UInt<1>, clock, probe => myref
+```
+
+See [@sec:probe-types] for more information on probes and reference types.
 
 ## Invalidates
 
@@ -921,6 +1019,17 @@ wire a: SInt
 wire b: SInt
 node mynode = mux(pred, a, b)
 ```
+
+Nodes may optionally export a probe reference to their contents:
+
+``` firrtl
+module MyModule :
+  output myref : Probe<UInt<1>>
+
+  node n = UInt<1>(1), probe => myref
+```
+
+See [@sec:probe-types] for more information on probes and reference types.
 
 ## Conditionals
 
@@ -1289,6 +1398,21 @@ In the example above, the type of `mymem`{.firrtl} is:
 The following sections describe how a memory's field types are calculated and
 the behavior of each type of memory port.
 
+Memories may optionally export probe references to their contents:
+
+``` firrtl
+module MyModule :
+  output myref : RWProbe<UInt>[4] ; vector of references to data within the memory
+
+  mem m:
+    data-type => UInt<5>
+    depth => 4
+    ...
+    rwprobe => myref
+```
+
+See [@sec:probe-types] for more information on probes and reference types.
+
 ### Read Ports
 
 If a memory is declared with element type `T`{.firrtl}, has a size less than or
@@ -1581,44 +1705,31 @@ cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 
 ## Probes
 
-Probes are used to capture and export references to a point in the circuit data flow.
-Read-only probes are created with `probe`{.firrtl} and probes that can be overridden
-are declared with the `rwprobe`{.firrtl} statement.
-Probe declarations specify the target reference to export to, which must be a compatible probe type
-(see [@sec:export-target-expressions] for details on export target expressions).
-For details of how to read and write through probe types, see [@sec:reading-probe-references;@sec:force].
+Probe references are created as part of the declaration of wires, nodes,
+memories, and registers.  The general syntax for each is `[probe|rwprobe] =>
+ref_target`{.firrtl}.  The `ref_target`{.firrtl} is an export target expression
+and must be a compatible probe type (see [@sec:export-target-expressions] for
+details on export target expressions).
 
-Consider this simple module that does not yet have a probe:
-
-```firrtl
-module Foo :
-  input x : UInt
-  output y : UInt
-
-  y <= x
-```
-
-This can be probed by adding a `Probe`{.firrtl} and connecting it between `x`{.firrtl} and `y`{.firrtl}:
+Examples of each are demonstrated below:
 
 ```firrtl
-module Foo :
-  input x : UInt
-  output y : UInt
-  output px : Probe<UInt>
+module Refs:
+  input clock:  Clock
+  output a : Probe<{x: UInt, y: UInt}> ; read-only ref. to wire 'p'
+  output b : RWProbe<UInt> ; force-able ref. to node 'q', inferred width.
+  output c : Probe<UInt<1>> ; read-only ref. to register 'r'
+  output d : RWProbe<UInt<2>>[4] ; vector of ref.'s to memory data in 'm'
 
-  probe p : UInt => px
-  p <= x
-  y <= p
+  wire p : {x: UInt, flip y : UInt}, probe => a ; probe is passive
+  node q = UInt<1>(0), rwprobe => b
+  reg r: UInt, clock, probe => c
+  mem m:
+    data-type => UInt<5>
+    depth => 4
+    ...
+    rwprobe => d
 ```
-
-This circuit is equivalent to the previous one, other than the probed data can
-be accessed indirectly above `Foo`{.firrtl} in the hierarchy.
-
-`rwprobe`{.firrtl} statements work the same way, with the corresponding
-exported reference being a `RWProbe`{.firrtl} type.
-
-The name of the probe is only significant for specifying the connections to and
-from and has no relation to the name used for the indirect reference.
 
 ### Export target expressions
 
@@ -1626,26 +1737,30 @@ Probe statements indicate where to export their reference (following the
 `=>`{.firrtl}), which must be a static expression (e.g., cannot contain a
 sub-access with a dynamically determined index) of a compatible reference type.
 
-For `Probe`{.firrtl} statements, this must be `probe`{.firrtl}, but
-`RWProbe`{.firrtl} is allowed to be exported or forwarded to both
-`rwprobe`{.firrtl} and `probe`{.firrtl} types with matching interior type.
-
-Exporting to a field within a bundle is allowed, for example:
+Exporting to a field within a bundle or other statically known sub-element of
+an aggregate is allowed, for example:
 ```firrtl
 module Foo:
   input x : UInt
   output y : {x: UInt, p: Probe<UInt>}
+  output z : Probe<UInt>[2]
 
-  probe p : UInt => y.p
+  wire p : UInt, probe => y.p
   p <= x
   y.x <= p
+
+  wire q : UInt, probe => z[0]
+  wire r : UInt, probe => z[1]
+  q <= p
+  r <= p
 ```
 
 ### Probes and Passive Types
 
-While `Probe`{.firrtl} types must be passive, the type of the probe statement is not required to be.
-This makes it possible to insert a probe between two connected expressions,
-passive or not, using the same code:
+While `Probe`{.firrtl} types must be passive, the type of the declaration
+exporting the probe is not required to be.
+This makes it possible to export probe references to passive and non-passive in
+the same way:
 
 ```firrtl
 module Foo :
@@ -1653,7 +1768,7 @@ module Foo :
   output y : {a: UInt, flip b: UInt}
   output xp : Probe<{a: UInt, b: UInt}> ; passive
 
-  probe p : {a: UInt, flip b: UInt} => xp ; not passive
+  wire p : {a: UInt, flip b: UInt}, probe => xp ; not passive
   p <= x
   y <= p
 ```
@@ -1669,10 +1784,8 @@ module RefProducer :
   output thereg : Probe<UInt>
 
   when en :
-    reg myreg : UInt, clk
+    reg myreg : UInt, clk, probe => thereg
     myreg <= a
-    probe p : UInt => thereg
-    p <= myreg
 ```
 
 ### Forward
@@ -1692,37 +1805,74 @@ module Forward :
 ```
 
 The forwarded expression and the export target must both be static expressions,
-and as with probe statements can export out from a block.
+and can also export out from a block.
 
-### Force
+Forward statements may narrow a probe of an aggregate to a sub-element using
+static expression:
 
-To override existing drivers for a `RWProbe`{.firrtl}, the `force`{.firrtl} statement is used.
-Force statements are simulation-only, and may be omitted otherwise.
+```firrtl
+module Foo :
+  output p : Probe<UInt[2]>[2]
+  ; ...
+
+module Forward :
+  output p : Probe<UInt>
+
+  inst f of Foo
+  forward f.p[0][1] => p
+```
+
+### Force and Release
+
+To override existing drivers for a `RWProbe`{.firrtl}, the `force`{.firrtl}
+statement is used.  Force statements are simulation-only constructs and may not
+be supported by all implementations.
 
 * `force(clock, condition, refDst, value)`{.firrtl}: always posedge clock
-* `force(condition, refDst, value)`{.firrtl}: initial
+* `force(refDst, value)`{.firrtl}: initial
 
 Condition is checked in procedural block before the force.
-When placed under `when`{.firrtl} blocks, condition is mixed in as with other statements
-(e.g., `assert`{.firrtl}).
+When placed under `when`{.firrtl} blocks, condition is mixed in as with other
+statements (e.g., `assert`{.firrtl}).
 
-#### Force-Release
+Each `force` variant has an matching `release` equivalent.
 
-posedge clock, force if condition, else release; negedge clock for release?
+Force on a non-passive bundle drives in the direction of each field's orientation.
 
-`force_release(clock, condition, refDst, value)`{.firrtl}
+Example:
 
-TODO: release
+```firrtl
+module Top:
+  input x : {a: UInt, flip b: UInt}
+  output y : {a: UInt, flip b: UInt}
 
-TODO: deposit, even if not standard?
+  inst d of DUT
+  d.x <= x
+  y <= d.y
+
+  wire val : {a: UInt<2>, b: UInt<2>}
+  val.a <= UInt<2>(1) 
+  val.b <= UInt<2>(2) 
+
+  force(d.r, val)
+
+module DUT :
+  input x : {a: UInt, flip b: UInt}
+  output y : {a: UInt, flip b: UInt}
+  output xp : Probe<{a: UInt, b: UInt}>
+
+  ; Force drives y.a and x.b, but not y.b and x.a
+  wire p : {a: UInt, flip b: UInt}, rwprobe => xp
+  p <= x
+  y <= p
+```
 
 # Expressions
 
 FIRRTL expressions are used for creating literal unsigned and signed integers,
-for referring to a declared circuit component, for
-statically and dynamically accessing a nested element within a component, for
-creating multiplexers, for performing primitive operations, and for reading
-a remote reference to a probe.
+for referring to a declared circuit component, for statically and dynamically
+accessing a nested element within a component, for creating multiplexers, for
+performing primitive operations, and for reading a remote reference to a probe.
 
 ## Unsigned Integers
 
@@ -1826,8 +1976,8 @@ width smaller than the number of bits required to represent the string's value.
 ## References
 
 A reference is simply a name that refers to a previously declared circuit
-component. It may refer to a module port, node, wire, register, instance,
-memory, or probe.
+component. It may refer to a module port, node, wire, register, instance, or
+memory.
 
 The following example connects a reference expression `in`{.firrtl}, referring
 to the previously declared port `in`{.firrtl}, to the reference expression
@@ -2052,7 +2202,7 @@ primitive operation.
 
 ## Reading Probe References
 
-Probes are read using the `read`{.firrtl} operation.  This reads the entire probed type together.
+Probes are read using the `read`{.firrtl} operation.
 
 Read expressions have source flow and can be connected to other components:
 
@@ -2068,7 +2218,8 @@ module Bar :
   x <= read(f.p) ; indirectly access the probed data
 ```
 
-Indexing into a probed value is done after a complete read of the type:
+Indexing (sub-field, sub-index, sub-access) into a probed value is allowed as
+part of the read:
 
 ```firrtl
 module Foo :
@@ -2079,11 +2230,8 @@ module Bar :
   output x : UInt
 
   inst f of Foo
-  x <= read(f.p).b ; indirectly access the probed data
+  x <= read(f.p.b) ; indirectly access the probed data
 ```
-
-The entire access may require use of a new wire or circuit component for storage
-when indexing into certain types.
 
 
 # Primitive Operations {#sec:primitive-operations}
@@ -2378,7 +2526,7 @@ the expression. Every expression is classified as either *source*, *sink*, or
 The flow of a reference to a declared circuit component depends on the kind of
 circuit component. A reference to an input port, an instance, a memory, and a
 node, is a source. A reference to an output port is a sink. A reference to a
-wire, register, or probe is duplex.
+wire or register is duplex.
 
 The flow of a sub-index or sub-access expression is the flow of the vector-typed
 expression it indexes or accesses.
@@ -2889,6 +3037,9 @@ id = ( "_" | letter ) , { "_" | letter | digit_dec } ;
 linecol = digit_dec , { digit_dec } , ":" , digit_dec , { digit_dec } ;
 info = "@" , "[" , { string , " " , linecol } , "]" ;
 
+(* Exporting probe reference *)
+export = ( "probe" | "rwprobe" ) , "=>" , reference
+
 (* Type definitions *)
 width = "<" , int , ">" ;
 type_ground = "Clock" | "Reset" | "AsyncReset"
@@ -2946,15 +3097,16 @@ memory = "mem" , id , ":" , [ info ] , newline , indent ,
            { "reader" , "=>" , id , newline } ,
            { "writer" , "=>" , id , newline } ,
            { "readwriter" , "=>" , id , newline } ,
+           { export , newline } ,
          dedent ;
 
 (* Statements *)
-statement = "wire" , id , ":" , type , [ info ]
+statement = "wire" , id , ":" , type , [ export ] , [ info ]
           | "reg" , id , ":" , type , expr ,
-            [ "(with: {reset => (" , expr , "," , expr ")})" ] , [ info ]
+            [ "(with: {reset => (" , expr , "," , expr ")})" ] , [ export ] , [ info ]
           | memory
           | "inst" , id , "of" , id , [ info ]
-          | "node" , id , "=" , expr , [ info ]
+          | "node" , id , "=" , expr , [ export ] , [ info ]
           | reference , "<=" , expr , [ info ]
           | reference , "is invalid" , [ info ]
           | "attach(" , { reference } , ")" , [ info ]
@@ -2965,10 +3117,8 @@ statement = "wire" , id , ":" , type , [ info ]
           | "printf(" , expr , "," , expr , "," , string ,
             { expr } , ")" , [ ":" , id ] , [ info ]
           | "skip" , [ info ] 
-          | "probe" , id , ":" , type , "=>", reference 
-          | "rwprobe" , id , ":" , type , "=>", reference
           | "forward" , reference , "=>", reference ;
-(* TODO: force/etc.)
+(* TODO: force/etc. *)
 
 (* Module definitions *)
 port = ( "input" | "output" ) , id , ":": , type , [ info ] ;
