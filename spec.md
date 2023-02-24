@@ -575,11 +575,15 @@ optionally specified using implementation-specific syntax.
 
 ### Input References
 
-Input probe references are not disallowed, but they should be used with care:
-when probe references are resolved they must target a single element at or
-below the resolution point.
-Support for other scenarios are allowed as determined by the implementation.
+Probe types are generally forwarded up the design hierarchy, being used to reach
+down into design internals from a higher point.
+As a result probe references are most often output ports, but may also
+be used on input ports internally.
 
+Input probe references are are allowed on internal modules, but they should be
+used with care: when probe references are resolved they must target a single
+element at or below the resolution point.
+Support for other scenarios are allowed as determined by the implementation.
 
 Input references are not allowed on public-facing modules:
 e.g., the top module and external modules.
