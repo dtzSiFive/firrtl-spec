@@ -526,13 +526,13 @@ Reference-type ports are statically routed through the design using
 the `forward`{.firrtl} and `export`{.firrtl} statements.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
-described below.  These are used for indirect access to the
+described below.  These are used for indirect access to probes of the
 data underlying circuit constructs they originate from, captured using
-`probe`{.firrtl} expressions.
+`probe`{.firrtl} expressions (see [@sec:probes]).
 
 <!--  fix above -->
 `Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
-`force`{.firrtl} and other statements.
+`force`{.firrtl} and related statements.
 Prefer the former as much as possible, as read-only probes impose fewer
 limitations and are more amenable to optimization.
 
@@ -1673,10 +1673,10 @@ cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 
 ## Probes
 
-Probe references are create with the `export`{.firrtl} statement, forwarded
-between instances using the `forward`{.firrtl} statement, read using
-the `read`{.firrtl} expression (see [@sec:reading-probe-references]), and
-used with `force`{.firrtl} and `release`{.firrtl} statements.
+Probe references are created with `probe`{.firrtl} expressions, exported with the `export`{.firrtl} statement,
+forwarded between instances using the `forward`{.firrtl} statement, read using
+the `read`{.firrtl} expression (see [@sec:reading-probe-references]), and used
+with `force`{.firrtl} and `release`{.firrtl} statements.
 
 Export and forward are used to route references through the design,
 and may be used wherever is most convenient in terms of available identifiers.
@@ -1710,18 +1710,18 @@ module Refs:
   output e : Probe<Clock> : ref. to input clock port
 
   wire p : {x: UInt, flip y : UInt}
-  export p as a ; probe is passive
+  export probe(p) as a ; probe is passive
   node q = UInt<1>(0)
-  export q as b
+  export rwprobe(q) as b
   reg r: UInt, clock
-  export r as c
+  export probe(r) as c
   mem m:
     data-type => UInt<5>
     depth => 4
     ...
 
-  export m as d
-  export clock as e
+  export rwprobe(m) as d
+  export probe(clock) as e
 ```
 
 `RWProbe`{.firrtl} references to ports are not allowed on public-facing modules.
@@ -1746,9 +1746,9 @@ module Foo:
   p <= x
   y.x <= p
 
-  export p as y.p
-  export p as z[0]
-  export p as z[1]
+  export probe(p) as y.p
+  export probe(p) as z[0]
+  export probe(p) as z[1]
 ```
 
 #### Probes and Passive Types
@@ -1763,7 +1763,7 @@ module Foo :
   output xp : Probe<{a: UInt, b: UInt}> ; passive
 
   wire p : {a: UInt, flip b: UInt} ; p is not passive
-  export p as xp 
+  export probe(p) as xp 
   p <= x
   y <= p
 ```
@@ -1781,7 +1781,7 @@ module RefProducer :
   when en :
     reg myreg : UInt, clk
     myreg <= a
-    export myreg as thereg
+    export probe(myreg) as thereg
 ```
 
 ### Forward
@@ -1859,11 +1859,11 @@ module Top:
 module DUT :
   input x : {a: UInt, flip b: UInt}
   output y : {a: UInt, flip b: UInt}
-  output xp : Probe<{a: UInt, b: UInt}>
+  output xp : RWProbe<{a: UInt, b: UInt}>
 
   ; Force drives y.a and x.b, but not y.b and x.a
   wire p : {a: UInt, flip b: UInt}
-  export p as xp
+  export rwprobe(p) as xp
   p <= x
   y <= p
 ```
