@@ -1720,10 +1720,9 @@ module Refs:
 
 <!-- rework -->
 Export and forward statements indicate where to export their reference (following the
-`=>`{.firrtl}), which must be a static reference expression consisting of only an identifier
-with one or more sub-field or sub-index 
-and sub-field  (e.g., cannot contain a
-sub-access with a dynamically determined index) of a compatible reference type.
+`as`{.firrtl}), which must be a static reference expression consisting of only an identifier
+with one or more sub-fields or sub-indices (e.g., cannot contain a sub-access
+with a dynamically determined index) of a compatible reference type.
 
 Exporting to a field within a bundle or other statically known sub-element of
 an aggregate is allowed, for example:
@@ -1737,9 +1736,9 @@ module Foo:
   p <= x
   y.x <= p
 
-  export p => y.p
-  export p => z[0]
-  export p => z[1]
+  export p as y.p
+  export p as z[0]
+  export p as z[1]
 ```
 
 #### Probes and Passive Types
@@ -1754,7 +1753,7 @@ module Foo :
   output xp : Probe<{a: UInt, b: UInt}> ; passive
 
   wire p : {a: UInt, flip b: UInt} ; p is not passive
-  export p => xp 
+  export p as xp 
   p <= x
   y <= p
 ```
@@ -1772,7 +1771,7 @@ module RefProducer :
   when en :
     reg myreg : UInt, clk
     myreg <= a
-    export myreg => thereg
+    export myreg as thereg
 ```
 
 ### Forward
@@ -1791,7 +1790,7 @@ module Forward :
   output p : Probe<UInt>
 
   inst f of Foo
-  forward f.p => p
+  forward f.p as p
 ```
 
 The forwarded expression and the export target must both be static expressions,
@@ -1809,7 +1808,7 @@ module Forward :
   output p : Probe<UInt>
 
   inst f of Foo
-  forward f.p[0][1] => p
+  forward f.p[0][1] as p
 ```
 
 ### Force and Release
@@ -1854,7 +1853,7 @@ module DUT :
 
   ; Force drives y.a and x.b, but not y.b and x.a
   wire p : {a: UInt, flip b: UInt}
-  export p => xp
+  export p as xp
   p <= x
   y <= p
 ```
