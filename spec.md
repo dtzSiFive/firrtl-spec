@@ -509,7 +509,7 @@ and are captured using values of reference type.
 For use in cross-module references (XMR's), a reference to a probe of the
 circuit component is used.  See [@sec:probes] for details.
 
-Using reference type ports, modules may expose internals for reading and
+Using reference-type ports, modules may expose internals for reading and
 forcing without routing wires out of the design.
 
 This is often useful for testing and verification, where reference types allow
@@ -519,11 +519,17 @@ accesses to the internals which will resolve to the appropriate target language
 construct by the compiler (e.g., hierarchical reference).
 
 Reference ports are not expected to be synthesizable or representable in the
-target language and may be omitted in the compiled design.
+target language and are omitted in the compiled design; they only exist
+at the FIRRTL level.
+
+Reference-type ports are statically routed through the design using
+the `forward`{.firrtl} and `export`{.firrtl} statements.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
-described below.  These are used for indirect access to passive access to the
-data underlying circuit constructs they originate from. 
+described below.  These are used for indirect access to the
+data underlying circuit constructs they originate from, captured using
+`probe`{.firrtl} expressions.
+
 <!--  fix above -->
 `Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
 `force`{.firrtl} and other statements.
@@ -557,9 +563,10 @@ RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 For details of how to read and write through probe types, see
 [@sec:reading-probe-references;@sec:force-and-release].
 
-All values of probe type must be initialized with exactly one statement:
-an originating `export`{.firrtl} statement ([@sec:export]), or
-by forwarding an existing probe reference ([@sec:forward]).
+All ports of probe type must be initialized with exactly one statement:
+an originating `export`{.firrtl} statement ([@sec:export]) using a
+`probe`{.firrtl} expression, or by forwarding an existing probe reference
+([@sec:forward]).
 
 Probe types are only allowed as part of module ports and may not appear
 anywhere else.
@@ -576,10 +583,10 @@ optionally specified using implementation-specific syntax.
 
 ### Input References
 
-Probe types are generally forwarded up the design hierarchy, being used to reach
+Probe references are generally forwarded up the design hierarchy, being used to reach
 down into design internals from a higher point.
-As a result probe references are most often output ports, but may also
-be used on input ports internally.
+As a result probe-type references are most often output ports, but may also be
+used on input ports internally, as described in this section.
 
 Input probe references are are allowed on internal modules, but they should be
 used with care: when probe references are resolved they must target a single
@@ -589,6 +596,8 @@ Support for other scenarios are allowed as determined by the implementation.
 Input references are not allowed on public-facing modules:
 e.g., the top module and external modules.
 
+Examples of input references follow.
+
 #### U-Turn Example
 
 
@@ -596,7 +605,7 @@ e.g., the top module and external modules.
 module UTurn:
   input in : Probe<UInt>
   output out : Probe<UInt>
-  forward in as out
+  forward in => out
 
 module RefBouncing:
   input x: UInt
@@ -606,7 +615,7 @@ module RefBouncing:
   inst u2 of UTurn
 
   node n = x
-  export n as u1.in
+  export probe(n) as u1.in
   forward u1.out as u2.in
 
   out <= read(u2.out) ; = x
@@ -622,12 +631,12 @@ module Consumer:
   input in : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
   ; ...
   node n = in.a
-  export n as in.cref
+  export probe(n) as in.cref
 
 module Producer:
   output out : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
   wire x : UInt
-  export x as out.pref
+  export probe(x) as out.pref
   ; ...
   out.a <= x
 
@@ -2224,6 +2233,25 @@ module Bar :
   inst f of Foo
   x <= read(f.p.b) ; indirectly access the probed data
 ```
+
+## Probes
+
+Probe references are generated with probe expressions.
+
+The probe expression creates a reference to a read-only or force-able
+view of the data underlying the specified reference expression.
+
+The type of the produced probe reference is always passive, but
+the probed expression may not be.
+
+Probed memories produce a vector of references to their data.
+
+There are two probe varieties: `probe`{.firrtl} and `rwprobe`{.firrtl} for
+producing probes of type `Probe`{.firrtl} and `RWProbe`{.firrtl}, respectively.
+
+Examples follow:
+
+TODO
 
 
 # Primitive Operations {#sec:primitive-operations}
