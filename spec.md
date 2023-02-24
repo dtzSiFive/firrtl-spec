@@ -509,7 +509,7 @@ and are captured using values of reference type.
 For use in cross-module references (XMR's), a reference to a probe of the
 circuit component is used.  See [@sec:probes] for details.
 
-Using reference type ports, modules may export references for reading and
+Using reference type ports, modules may expose internals for reading and
 forcing without routing wires out of the design.
 
 This is often useful for testing and verification, where reference types allow
@@ -523,7 +523,8 @@ target language and may be omitted in the compiled design.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
 described below.  These are used for indirect access to passive access to the
-data underlying circuit constructs they originate from.
+data underlying circuit constructs they originate from. 
+<!--  fix above -->
 `Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
 `force`{.firrtl} and other statements.
 Prefer the former as much as possible, as read-only probes impose fewer
