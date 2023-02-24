@@ -556,18 +556,21 @@ RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 For details of how to read and write through probe types, see
 [@sec:reading-probe-references;@sec:force-and-release].
 
-All instances of probe types must be initialized with exactly one statement:
-by forwarding an existing probe reference ([@sec:forward]), or as part of the declaration of
-a wire, node, memory, or register ([@sec:probes]).
+All values of probe type must be initialized with exactly one statement:
+an originating `export`{.firrtl} statement ([@sec:export]), or
+by forwarding an existing probe reference ([@sec:forward]).
 
 Probe types are only allowed as part of module ports and may not appear
 anywhere else.
 
-Probes within vectors must be accessed using statically known index values.
+Probes within vectors must be accessed using statically known index values;
+more generally, all expressions indexing to or through a probe type must not be
+dependent on dynamic values.
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent
 optionally specified using implementation-specific syntax.
+<!-- TODO -->
 
 
 ### Input References
