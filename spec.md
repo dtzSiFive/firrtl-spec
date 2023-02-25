@@ -2249,9 +2249,15 @@ Probed memories produce a vector of references to their data.
 There are two probe varieties: `probe`{.firrtl} and `rwprobe`{.firrtl} for
 producing probes of type `Probe`{.firrtl} and `RWProbe`{.firrtl}, respectively.
 
-Examples follow:
+The following example exports a probe reference to a port:
 
-TODO
+```firrtl
+module MyModule :
+  input in: UInt
+  output r : Probe<UInt>
+
+  export probe(in) as r
+```
 
 
 # Primitive Operations {#sec:primitive-operations}
