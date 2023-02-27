@@ -3063,9 +3063,6 @@ id = ( "_" | letter ) , { "_" | letter | digit_dec } ;
 linecol = digit_dec , { digit_dec } , ":" , digit_dec , { digit_dec } ;
 info = "@" , "[" , { string , " " , linecol } , "]" ;
 
-(* Exporting probe reference *)
-export = ( "probe" | "rwprobe" ) , "=>" , reference
-
 (* Type definitions *)
 width = "<" , int , ">" ;
 type_ground = "Clock" | "Reset" | "AsyncReset"
@@ -3106,6 +3103,8 @@ expr =
   | reference
   | "mux" , "(" , expr , "," , expr , "," , expr , ")"
   | "read" , "(" , reference , ")"
+  | "probe" , "(" , reference , ")"
+  | "rwprobe" , "(" , reference , ")"
   | primop ;
 reference = id
           | reference , "." , id
@@ -3123,16 +3122,15 @@ memory = "mem" , id , ":" , [ info ] , newline , indent ,
            { "reader" , "=>" , id , newline } ,
            { "writer" , "=>" , id , newline } ,
            { "readwriter" , "=>" , id , newline } ,
-           { export , newline } ,
          dedent ;
 
 (* Statements *)
-statement = "wire" , id , ":" , type , [ export ] , [ info ]
+statement = "wire" , id , ":" , type , [ info ]
           | "reg" , id , ":" , type , expr ,
-            [ "(with: {reset => (" , expr , "," , expr ")})" ] , [ export ] , [ info ]
+            [ "(with: {reset => (" , expr , "," , expr ")})" ] , [ info ]
           | memory
           | "inst" , id , "of" , id , [ info ]
-          | "node" , id , "=" , expr , [ export ] , [ info ]
+          | "node" , id , "=" , expr , [ info ]
           | reference , "<=" , expr , [ info ]
           | reference , "is invalid" , [ info ]
           | "attach(" , { reference } , ")" , [ info ]
@@ -3143,7 +3141,7 @@ statement = "wire" , id , ":" , type , [ export ] , [ info ]
           | "printf(" , expr , "," , expr , "," , string ,
             { expr } , ")" , [ ":" , id ] , [ info ]
           | "skip" , [ info ] 
-          | "forward" , reference , "=>", reference ;
+          | "assign" , reference , "=" , reference [ info ] ;
 (* TODO: force/etc. *)
 
 (* Module definitions *)
