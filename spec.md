@@ -3104,11 +3104,12 @@ expr =
   | "mux" , "(" , expr , "," , expr , "," , expr , ")"
   | "read" , "(" , reference , ")"
   | primop ;
-reference = id
-          | reference , "." , id
-          | reference , "[" , int , "]"
+static_reference = id
+                 | reference , "." , id
+                 | reference , "[" , int , "]" ;
+reference = static_reference
           | reference , "[" , expr , "]" ;
-reforigin = ( "probe" | "rwprobe" ) , "(" , reference , ")"
+ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")"
 
 (* Memory *)
 ruw = ( "old" | "new" | "undefined" ) ;
@@ -3140,8 +3141,8 @@ statement = "wire" , id , ":" , type , [ info ]
           | "printf(" , expr , "," , expr , "," , string ,
             { expr } , ")" , [ ":" , id ] , [ info ]
           | "skip" , [ info ] 
-          | "export" , reforigin , "as" , reference , [ info ]
-          | "forward" , reference , "as" , reference , [ info ];
+          | "export" , ref_expr , "as" , static_reference , [ info ]
+          | "forward" , static_reference , "as" , static_reference , [ info ];
 (* TODO: force/etc. *)
 
 (* Module definitions *)
