@@ -589,7 +589,7 @@ dependent on dynamic values.
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent
-optionally specified using `ref` statements.
+optionally specified using `ref`{.firrtl} statements.
 
 ### Input References
 
