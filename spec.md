@@ -1991,10 +1991,10 @@ will be rewritten as "the port `in`{.firrtl} is connected to the port
 ### Static Reference Expressions
 
 Static references start with an identifier, optionally followed by sub-fields
-or sub-indices selection a particular sub-element.
+or sub-indices selecting a particular sub-element.
 
-Export targets, probe expressions, and both arguments to `forward` statements
-must all be static references.
+Export targets, probe expressions, and both arguments to `forward`{.firrtl}
+statements must all be static references.
 
 ## Sub-fields
 
