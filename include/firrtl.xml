@@ -118,6 +118,7 @@
       <context name="memory" attribute="Keyword" lineEndContext="#stay">
         <Detect2Chars char="=" char1="&gt;" attribute="Operator" context="memoryRHS"/>
         <StringDetect String="read-under-write" attribute="Keyword" context="#pop!memoryLast"/>
+        <DetectChar char= ";" context="comment" attribute="Comment"/>
       </context>
       <context name="memoryRHS" attribute="ID" lineEndContext="#pop">
         <keyword String="types" attribute="Keyword" context="type"/>
