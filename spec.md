@@ -3116,7 +3116,7 @@ static_reference = id
                  | reference , "[" , int , "]" ;
 reference = static_reference
           | reference , "[" , expr , "]" ;
-ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")"
+ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")" ;
 
 (* Memory *)
 ruw = ( "old" | "new" | "undefined" ) ;
