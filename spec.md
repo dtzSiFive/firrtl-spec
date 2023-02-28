@@ -2219,7 +2219,7 @@ module Bar :
   x <= read(f.p) ; indirectly access the probed data
 ```
 
-Indexing (sub-field, sub-index, sub-access) into a probed value is allowed as
+Indexing statically (sub-field, sub-index) into a probed value is allowed as
 part of the read:
 
 ```firrtl
@@ -3102,7 +3102,7 @@ expr =
     ( "UInt" | "SInt" ) , [ width ] , "(" , ( int ) , ")"
   | reference
   | "mux" , "(" , expr , "," , expr , "," , expr , ")"
-  | "read" , "(" , reference , ")"
+  | "read" , "(" , static_reference , ")"
   | primop ;
 static_reference = id
                  | reference , "." , id
