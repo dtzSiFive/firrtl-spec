@@ -1696,19 +1696,8 @@ These statements are detailed below.
 
 ### Export
 
-The export statement takes a reference expression, such as the name of a wire,
-and exports a probe reference to it into a sink-flow reference target.
-
-<!-- TODO: phrasing, refactor out language re:sub- and such -->
-The exported expression must be an identifier, optionally with sub-fields or
-sub-indices selecting a particular sub-element.
-The target expression must also be an identifier with optional sub-field or
-sub-index selections that resolves to a probe reference of compatible type.
-Accordingly, the target expression will target a module or instance port
-followed by sub-field or sub-index details.
-See [@sec:export-target-expressions].
-
-The type of the probe reference is inferred from the target reference type.
+The export statement takes a reference expression, which must be a probe expression,
+and exports the probe reference to into a sink-flow static reference target.
 
 ```firrtl
 module Refs:
@@ -1734,16 +1723,6 @@ module Refs:
   export probe(clock) as e
 ```
 
-`RWProbe`{.firrtl} references to ports are not allowed on public-facing modules.
-
-#### Export target expressions
-
-<!-- rework -->
-Export and forward statements indicate where to export their reference (following the
-`as`{.firrtl}), which must be a static reference expression consisting of only an identifier
-with one or more sub-fields or sub-indices (e.g., cannot contain a sub-access
-with a dynamically determined index) of a compatible reference type.
-
 Exporting to a field within a bundle or other statically known sub-element of
 an aggregate is allowed, for example:
 ```firrtl
@@ -1760,6 +1739,16 @@ module Foo:
   export probe(p) as z[0]
   export probe(p) as z[1]
 ```
+
+`RWProbe`{.firrtl} references to ports are not allowed on public-facing modules.
+
+#### Static Reference Expressions
+
+Static references start with an identifier, optionally followed by sub-fields
+or sub-indices selection a particular sub-element.
+
+Export targets, probe expressions, and both arguments to `forward` statements
+must all be static references.
 
 #### Probes and Passive Types
 
@@ -2244,7 +2233,10 @@ module Bar :
   x <= read(f.p.b) ; indirectly access the probed data
 ```
 
-## Probes
+The source of the probe must reside at or below the point of the `read`
+expression in the design hierarchy.
+
+## Probe
 
 Probe references are generated with probe expressions.
 
@@ -2268,6 +2260,10 @@ module MyModule :
 
   export probe(in) as r
 ```
+
+The probed expression must be a static reference.
+
+See [@sec:probe-types;@sec:probe] for more details on probe references and their use.
 
 
 # Primitive Operations {#sec:primitive-operations}
