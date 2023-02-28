@@ -1717,7 +1717,8 @@ module Refs:
   mem m:
     data-type => UInt<5>
     depth => 4
-    ...
+    ; ...
+    read-under-write => undefined
 
   export rwprobe(m) as d
   export probe(clock) as e
