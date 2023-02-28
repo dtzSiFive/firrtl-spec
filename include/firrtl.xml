@@ -19,6 +19,9 @@
       <item>wire</item>
       <item>node</item>
       <item>ref</item>
+      <item>as</item>
+      <item>export</item>
+      <item>forward</item>
     </list>
     <list name="types">
       <item>UInt</item>
@@ -29,7 +32,6 @@
       <item>Reset</item>
       <item>AsyncReset</item>
     </list>
-    <!-- TODO: Rework this to reflect latest changes, and less hacky later on -->
     <list name="outertype">
       <item>Probe</item>
       <item>RWProbe</item>
@@ -85,6 +87,8 @@
       <item>assume</item>
       <item>cover</item>
       <item>read</item>
+      <item>probe</item>
+      <item>rwprobe</item>
       <item>force</item>
       <item>release</item>
       <item>deposit</item>
@@ -108,9 +112,6 @@
         <DetectChar char="&quot;" attribute="String" context="string"/>
         <StringDetect String="reg" attribute="Keyword" context="register"/>
         <StringDetect String="mem" attribute="Keyword" context="memoryFirst"/>
-        <StringDetect String="probe" attribute="Keyword" context="probe"/>
-        <StringDetect String="rwprobe" attribute="Keyword" context="probe"/>
-        <StringDetect String="forward" attribute="Keyword" context="forward"/>
       </context>
       <context name="memoryFirst" attribute="ID" lineEndContext="#pop!memory">
       </context>
@@ -134,14 +135,6 @@
         <StringDetect String="reset" attribute="Keyword" context="#pop"/>
         <DetectChar char= ";" context="comment" attribute="Comment"/>
       </context>
-      <context name="probe" attribute="ID" lineEndContext="#pop">
-        <Detect2Chars char="=" char1="&gt;" attribute="Operator" context="#stay"/>
-        <keyword String="types" attribute="Keyword" context="type"/>
-        <AnyChar String=":" attribute="Separator" context="#stay"/>
-      </context>
-      <context name="forward" attribute="ID" lineEndContext="#pop">
-        <Detect2Chars char="=" char1="&gt;" attribute="Operator" context="#stay"/>
-      </context>
       <context name="comment" attribute="Comment" lineEndContext="#pop">
       </context>
       <context name="string" attribute="String" lineEndContext="#stay">
@@ -154,16 +147,16 @@
         <DetectChar char="&lt;" attribute="Operator" context="#stay"/>
         <keyword String="types" attribute="Keyword" context="type"/>
         <DetectChar char="{" context="field" attribute="Separator"/>
-        <DetectChar char="}" attribute="Separator" context="#stay"/>
+        <DetectChar char="}" attribute="Separator" context="#pop#pop"/>
         <DetectChar char= ";" context="comment" attribute="Comment"/>
         <AnyChar String="&gt;" attribute="Operator" context="#pop"/>
+        <DetectChar char="[" attribute="Operator" context="widthOrDepthOrLit"/>
       </context>
       <context name="type" attribute="String" lineEndContext="#pop">
         <AnyChar String="&lt;[(" attribute="Operator" context="widthOrDepthOrLit"/>
         <AnyChar String="," attribute="Separator" context="#pop"/>
         <AnyChar String="}" attribute="Separator" context="#pop#pop"/>
         <DetectChar char= ";" context="comment" attribute="Comment"/>
-        <Detect2Chars char="=" char1="&gt;" attribute="Operator" context="#pop"/>
         <AnyChar String="&gt;" attribute="Operator" context="#pop"/>
       </context>
       <context name="widthOrDepthOrLit" attribute="String" lineEndContext="#stay">
