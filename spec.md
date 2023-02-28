@@ -1706,7 +1706,7 @@ module Refs:
   output b : RWProbe<UInt> ; force-able ref. to node 'q', inferred width.
   output c : Probe<UInt<1>> ; read-only ref. to register 'r'
   output d : RWProbe<UInt<2>>[4] ; vector of ref.'s to memory data in 'm'
-  output e : Probe<Clock> : ref. to input clock port
+  output e : Probe<Clock> ; ref. to input clock port
 
   wire p : {x: UInt, flip y : UInt}
   export probe(p) as a ; probe is passive
