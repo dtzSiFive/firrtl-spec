@@ -3131,6 +3131,12 @@ memory = "mem" , id , ":" , [ info ] , newline , indent ,
            { "readwriter" , "=>" , id , newline } ,
          dedent ;
 
+(* Force and Release *)
+force_release_ops = "force(" | "release(" ;
+force_release = force_release_ops ,
+                  [ expr , "," , expr , "," ] ,
+                  static_reference , "," , expr , ")" , [ info ] ;
+
 (* Statements *)
 statement = "wire" , id , ":" , type , [ info ]
           | "reg" , id , ":" , type , expr ,
@@ -3149,8 +3155,8 @@ statement = "wire" , id , ":" , type , [ info ]
             { expr } , ")" , [ ":" , id ] , [ info ]
           | "skip" , [ info ] 
           | "export" , ref_expr , "as" , static_reference , [ info ]
-          | "forward" , static_reference , "as" , static_reference , [ info ];
-(* TODO: force/etc. *)
+          | "forward" , static_reference , "as" , static_reference , [ info ]
+          | force_release ;
 
 (* Module definitions *)
 port = ( "input" | "output" ) , id , ":": , type , [ info ] ;
