@@ -1743,14 +1743,6 @@ module Foo:
 
 `RWProbe`{.firrtl} references to ports are not allowed on public-facing modules.
 
-#### Static Reference Expressions
-
-Static references start with an identifier, optionally followed by sub-fields
-or sub-indices selection a particular sub-element.
-
-Export targets, probe expressions, and both arguments to `forward` statements
-must all be static references.
-
 #### Probes and Passive Types
 
 While `Probe`{.firrtl} inner types are passive, the type of the exported expression
@@ -1995,6 +1987,14 @@ In the rest of the document, for brevity, the names of components will be used
 to refer to a reference expression to that component. Thus, the above example
 will be rewritten as "the port `in`{.firrtl} is connected to the port
 `out`{.firrtl}".
+
+### Static Reference Expressions
+
+Static references start with an identifier, optionally followed by sub-fields
+or sub-indices selection a particular sub-element.
+
+Export targets, probe expressions, and both arguments to `forward` statements
+must all be static references.
 
 ## Sub-fields
 
