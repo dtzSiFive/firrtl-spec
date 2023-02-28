@@ -218,9 +218,10 @@ Externally defined modules are modules whose implementation is not provided in
 the current circuit.  Only the ports and name of the externally defined module
 are specified in the circuit.  An externally defined module may include, in
 order, an optional _defname_ which sets the name of the external module in the
-resulting Verilog and zero or more name--value _parameter_ statements.  Each
-name--value parameter statement will result in a value being passed to the named
-parameter in the resulting Verilog.
+resulting Verilog, zero or more name--value _parameter_ statements, and zero or
+more _ref_ statements indicating the resolved paths of the module's exported
+references.  Each name--value parameter statement will result in a value being
+passed to the named parameter in the resulting Verilog.
 
 An example of an externally defined module is:
 
@@ -241,6 +242,17 @@ ports.
 A common use of an externally defined module is to represent a Verilog module
 that will be written separately and provided together with FIRRTL-generated
 Verilog to downstream tools.
+
+An example of an externally defined module with references is:
+
+```firrtl
+extmodule MyExternalModuleWithRefs :
+  input foo : UInt<2>
+  output mysignal : Probe<UInt<1>>
+  output myreg : RWProbe<UInt<8>>
+  ref mysignal = a.b
+  ref myreg = x.y
+```
 
 # Types
 
@@ -577,9 +589,7 @@ dependent on dynamic values.
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent
-optionally specified using implementation-specific syntax.
-<!-- TODO -->
-
+optionally specified using `ref` statements.
 
 ### Input References
 
@@ -3155,6 +3165,7 @@ extmodule = "extmodule" , id , ":" , [ info ] , newline , indent ,
               { port , newline } ,
               [ "defname" , "=" , id , newline ] ,
               { "parameter" , "=" , ( string | int ) , newline } ,
+              { "ref" , static_reference , "=" , static_reference , newline } ,
             dedent ;
 
 (* In-line Annotations *)
