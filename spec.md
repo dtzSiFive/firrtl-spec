@@ -538,11 +538,10 @@ Reference-type ports are statically routed through the design using
 the `forward`{.firrtl} and `export`{.firrtl} statements.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
-described below.  These are used for indirect access to probes of the
-data underlying circuit constructs they originate from, captured using
+described below.  These are used for indirect access to probes of the data
+underlying circuit constructs they originate from, captured using
 `probe`{.firrtl} expressions (see [@sec:probes]).
 
-<!--  fix above -->
 `Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
 `force`{.firrtl} and related statements.
 Prefer the former as much as possible, as read-only probes impose fewer
@@ -558,7 +557,7 @@ Probe types are reference types used to access circuit elements' data remotely.
 There are two probe types: `Probe`{.firrtl} and `RWProbe`{.firrtl}.
 `RWProbe`{.firrtl} is a `Probe`{.firrtl} type, but not the other way around.
 
-Probe types are composed of the type of data that they refer to, which is
+Probe types are parametric over the type of data that they refer to, which is
 always passive (as defined in [@sec:passive-types]) even when the probed target
 is not (see [@sec:probes-and-passive-types]).
 Probe types cannot contain probe types.
@@ -593,8 +592,8 @@ optionally specified using `ref`{.firrtl} statements.
 
 ### Input References
 
-Probe references are generally forwarded up the design hierarchy, being used to reach
-down into design internals from a higher point.
+Probe references are generally forwarded up the design hierarchy, being used to
+reach down into design internals from a higher point.
 As a result probe-type references are most often output ports, but may also be
 used on input ports internally, as described in this section.
 
@@ -1683,13 +1682,14 @@ cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 
 ## Probes
 
-Probe references are created with `probe`{.firrtl} expressions, exported with the `export`{.firrtl} statement,
-forwarded between instances using the `forward`{.firrtl} statement, read using
-the `read`{.firrtl} expression (see [@sec:reading-probe-references]), and used
-with `force`{.firrtl} and `release`{.firrtl} statements.
+Probe references are created with `probe`{.firrtl} expressions, exported with
+the `export`{.firrtl} statement, forwarded between instances using the
+`forward`{.firrtl} statement, read using the `read`{.firrtl} expression (see
+[@sec:reading-probe-references]), and used with `force`{.firrtl} and
+`release`{.firrtl} statements.
 
-Export and forward are used to route references through the design,
-and may be used wherever is most convenient in terms of available identifiers.
+Export and forward are used to route references through the design, and may be
+used wherever is most convenient in terms of available identifiers.
 Every sink-flow probe must be the target of exactly one of these statements.
 
 These statements are detailed below.
@@ -1704,8 +1704,8 @@ The exported expression must be an identifier, optionally with sub-fields or
 sub-indices selecting a particular sub-element.
 The target expression must also be an identifier with optional sub-field or
 sub-index selections that resolves to a probe reference of compatible type.
-Accordingly, the target expression will target a module or instance port followed
-by sub-field or sub-index details.
+Accordingly, the target expression will target a module or instance port
+followed by sub-field or sub-index details.
 See [@sec:export-target-expressions].
 
 The type of the probe reference is inferred from the target reference type.
