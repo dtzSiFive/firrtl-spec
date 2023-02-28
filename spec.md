@@ -614,7 +614,7 @@ Examples of input references follow.
 module UTurn:
   input in : Probe<UInt>
   output out : Probe<UInt>
-  forward in => out
+  forward in as out
 
 module RefBouncing:
   input x: UInt
