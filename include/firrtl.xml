@@ -18,6 +18,7 @@
       <item>of</item>
       <item>wire</item>
       <item>node</item>
+      <item>ref</item>
     </list>
     <list name="types">
       <item>UInt</item>
@@ -85,7 +86,6 @@
       <item>cover</item>
       <item>read</item>
       <item>force</item>
-      <item>force_release</item>
       <item>release</item>
       <item>deposit</item>
     </list>
