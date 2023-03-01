@@ -539,11 +539,11 @@ flows into the module, and the `d`{.firrtl} sub-field contained in the
 
 ## Reference Types
 
-References can be exported from a module for indirect access elsewhere,
-and are captured using values of reference type.
+References can be exported from a module for indirect access elsewhere, and are
+captured using values of reference type.
 
-For use in cross-module references (hierarchical references in Verilog),
-a reference to a probe of the circuit component is used.  See [@sec:probes] for
+For use in cross-module references (hierarchical references in Verilog), a
+reference to a probe of the circuit component is used.  See [@sec:probes] for
 details.
 
 Using reference-type ports, modules may expose internals for reading and
@@ -556,11 +556,11 @@ accesses to the internals which will resolve to the appropriate target language
 construct by the compiler (e.g., hierarchical reference).
 
 Reference ports are not expected to be synthesizable or representable in the
-target language and are omitted in the compiled design; they only exist
-at the FIRRTL level.
+target language and are omitted in the compiled design; they only exist at the
+FIRRTL level.
 
-Reference-type ports are statically routed through the design using
-the `forward`{.firrtl} and `export`{.firrtl} statements.
+Reference-type ports are statically routed through the design using the
+`forward`{.firrtl} and `export`{.firrtl} statements.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
 described below.  These are used for indirect access to probes of the data
@@ -568,9 +568,9 @@ underlying circuit constructs they originate from, captured using
 `probe`{.firrtl} expressions (see [@sec:probes]).
 
 `Probe`{.firrtl} types are read-only, and `RWProbe`{.firrtl} may be used with
-`force`{.firrtl} and related statements.
-Prefer the former as much as possible, as read-only probes impose fewer
-limitations and are more amenable to optimization.
+`force`{.firrtl} and related statements.  Prefer the former as much as
+possible, as read-only probes impose fewer limitations and are more amenable to
+optimization.
 
 References must always be able to be statically traced to their target, or to
 an external module's output reference.
@@ -584,10 +584,11 @@ There are two probe types: `Probe`{.firrtl} and `RWProbe`{.firrtl}.
 
 Probe types are parametric over the type of data that they refer to, which is
 always passive (as defined in [@sec:passive-types]) even when the probed target
-is not (see [@sec:probes-and-passive-types]).
-Probe types cannot contain probe types.
+is not (see [@sec:probes-and-passive-types]).  Probe types cannot contain probe
+types.
 
-Conceptually probe types are single-direction views of the probed data-flow point.
+Conceptually probe types are single-direction views of the probed data-flow
+point.
 
 Examples:
 
@@ -599,8 +600,8 @@ RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 For details of how to read and write through probe types, see
 [@sec:reading-probe-references;@sec:force-and-release].
 
-All ports of probe type must be initialized with exactly one statement:
-an originating `export`{.firrtl} statement ([@sec:export]) using a
+All ports of probe type must be initialized with exactly one statement: an
+originating `export`{.firrtl} statement ([@sec:export]) using a
 `probe`{.firrtl} expression, or by forwarding an existing probe reference
 ([@sec:forward]).
 
@@ -612,23 +613,23 @@ more generally, all expressions indexing to or through a probe type must not be
 dependent on dynamic values.
 
 Probe types may be specified as part of an external module (see
-[@sec:externally-defined-modules]), with the resolved referent
-optionally specified using `ref`{.firrtl} statements.
+[@sec:externally-defined-modules]), with the resolved referent optionally
+specified using `ref`{.firrtl} statements.
 
 ### Input References
 
 Probe references are generally forwarded up the design hierarchy, being used to
-reach down into design internals from a higher point.
-As a result probe-type references are most often output ports, but may also be
-used on input ports internally, as described in this section.
+reach down into design internals from a higher point.  As a result probe-type
+references are most often output ports, but may also be used on input ports
+internally, as described in this section.
 
-Input probe references are allowed on internal modules, but they should be
-used with care: when probe references are resolved they must target a single
-element at or below the resolution point.
-Support for other scenarios are allowed as determined by the implementation.
+Input probe references are allowed on internal modules, but they should be used
+with care: when probe references are resolved they must target a single element
+at or below the resolution point.  Support for other scenarios are allowed as
+determined by the implementation.
 
-Input references are not allowed on public-facing modules:
-e.g., the top module and external modules.
+Input references are not allowed on public-facing modules: e.g., the top module
+and external modules.
 
 Examples of input references follow.
 
@@ -1771,15 +1772,16 @@ the `export`{.firrtl} statement, forwarded between instances using the
 `release`{.firrtl} statements.
 
 Export and forward are used to route references through the design, and may be
-used wherever is most convenient in terms of available identifiers.
-Every sink-flow probe must be the target of exactly one of these statements.
+used wherever is most convenient in terms of available identifiers.  Every
+sink-flow probe must be the target of exactly one of these statements.
 
 These statements are detailed below.
 
 ### Export
 
-The export statement takes a reference expression, which must be a probe expression,
-and exports the probe reference to into a sink-flow static reference target.
+The export statement takes a reference expression, which must be a probe
+expression, and exports the probe reference to into a sink-flow static
+reference target.
 
 ```firrtl
 module Refs:
@@ -1808,6 +1810,7 @@ module Refs:
 
 Exporting to a field within a bundle or other statically known sub-element of
 an aggregate is allowed, for example:
+
 ```firrtl
 module Foo:
   input x : UInt
@@ -1823,12 +1826,13 @@ module Foo:
   export probe(p) as z[1]
 ```
 
-`RWProbe`{.firrtl} references to ports are not allowed on public-facing modules.
+`RWProbe`{.firrtl} references to ports are not allowed on public-facing
+modules.
 
 #### Probes and Passive Types
 
-While `Probe`{.firrtl} inner types are passive, the type of the exported expression
-is not required to be:
+While `Probe`{.firrtl} inner types are passive, the type of the exported
+expression is not required to be:
 
 ```firrtl
 module Foo :
@@ -1904,9 +1908,9 @@ be supported by all implementations.
 * `force(clock, condition, refDst, value)`{.firrtl}: always posedge clock
 * `force(refDst, value)`{.firrtl}: initial
 
-Condition is checked in procedural block before the force.
-When placed under `when`{.firrtl} blocks, condition is mixed in as with other
-statements (e.g., `assert`{.firrtl}).
+Condition is checked in procedural block before the force.  When placed under
+`when`{.firrtl} blocks, condition is mixed in as with other statements (e.g.,
+`assert`{.firrtl}).
 
 Each `force`{.firrtl} variant has an matching `release`{.firrtl} equivalent.
 
@@ -2361,11 +2365,11 @@ expression in the design hierarchy.
 
 Probe references are generated with probe expressions.
 
-The probe expression creates a reference to a read-only or force-able
-view of the data underlying the specified reference expression.
+The probe expression creates a reference to a read-only or force-able view of
+the data underlying the specified reference expression.
 
-The type of the produced probe reference is always passive, but
-the probed expression may not be.
+The type of the produced probe reference is always passive, but the probed
+expression may not be.
 
 Probed memories produce a vector of references to their data.
 
@@ -2384,7 +2388,8 @@ module MyModule :
 
 The probed expression must be a static reference.
 
-See [@sec:probe-types;@sec:probe] for more details on probe references and their use.
+See [@sec:probe-types;@sec:probe] for more details on probe references and
+their use.
 
 
 # Primitive Operations {#sec:primitive-operations}
