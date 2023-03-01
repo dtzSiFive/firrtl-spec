@@ -281,8 +281,9 @@ intmodule MyIntrinsicModule_xhello_y64 :
 
 FIRRTL has three classes of types: _ground_ types, _aggregate_ types, and
 _reference_ types.  Ground types are fundamental and are not composed of other
-types.  Aggregate types are composed of one or more aggregate or ground types.
-Reference types are used for indirect access to circuit components.
+types.  Aggregate types and reference types are composed of one or more
+aggregate or ground types.  Reference types may not contain other reference
+types.
 
 ## Ground Types
 
