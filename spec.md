@@ -3264,7 +3264,7 @@ memory = "mem" , id , ":" , [ info ] , newline , indent ,
 force_release_ops = "force(" | "release(" ;
 force_release = force_release_ops ,
                   [ expr , "," , expr , "," ] ,
-                  static_reference , "," , expr , ")" , [ info ] ;
+                  static_reference , "," , expr , ")" ;
 
 (* Statements *)
 statement = "wire" , id , ":" , type , [ info ]
@@ -3285,7 +3285,7 @@ statement = "wire" , id , ":" , type , [ info ]
           | "skip" , [ info ]
           | "export" , ref_expr , "as" , static_reference , [ info ]
           | "forward" , static_reference , "as" , static_reference , [ info ]
-          | force_release ;
+          | force_release , [ info ] ;
 
 (* Module definitions *)
 port = ( "input" | "output" ) , id , ":": , type , [ info ] ;
