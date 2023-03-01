@@ -542,8 +542,9 @@ flows into the module, and the `d`{.firrtl} sub-field contained in the
 References can be exported from a module for indirect access elsewhere,
 and are captured using values of reference type.
 
-For use in cross-module references (XMR's), a reference to a probe of the
-circuit component is used.  See [@sec:probes] for details.
+For use in cross-module references (hierarchical references in Verilog),
+a reference to a probe of the circuit component is used.  See [@sec:probes] for
+details.
 
 Using reference-type ports, modules may expose internals for reading and
 forcing without routing wires out of the design.
