@@ -3234,8 +3234,8 @@ expr =
   | "read" , "(" , static_reference , ")"
   | primop ;
 static_reference = id
-                 | reference , "." , id
-                 | reference , "[" , int , "]" ;
+                 | static_reference , "." , id
+                 | static_reference , "[" , int , "]" ;
 reference = static_reference
           | reference , "[" , expr , "]" ;
 ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")" ;
