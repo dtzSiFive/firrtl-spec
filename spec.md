@@ -1768,8 +1768,8 @@ cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 Probe references are created with `probe`{.firrtl} expressions, exported with
 the `export`{.firrtl} statement, forwarded between instances using the
 `forward`{.firrtl} statement, read using the `read`{.firrtl} expression (see
-[@sec:reading-probe-references]), and used with `force`{.firrtl} and
-`release`{.firrtl} statements.
+[@sec:reading-probe-references]), and forced and released with `force`{.firrtl}
+and `release`{.firrtl} statements.
 
 Export and forward are used to route references through the design, and may be
 used wherever is most convenient in terms of available identifiers.  Every
