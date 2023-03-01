@@ -1817,13 +1817,13 @@ module Foo:
   output y : {x: UInt, p: Probe<UInt>}
   output z : Probe<UInt>[2]
 
-  wire p : UInt
-  p <= x
-  y.x <= p
+  wire w : UInt
+  w <= x
+  y.x <= w
 
-  export probe(p) as y.p
-  export probe(p) as z[0]
-  export probe(p) as z[1]
+  export probe(w) as y.p
+  export probe(w) as z[0]
+  export probe(w) as z[1]
 ```
 
 `RWProbe`{.firrtl} references to ports are not allowed on public-facing
