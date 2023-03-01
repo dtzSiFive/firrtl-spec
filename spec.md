@@ -602,7 +602,7 @@ For details of how to read and write through probe types, see
 
 All ports of probe type must be initialized with exactly one statement: an
 originating `export`{.firrtl} statement ([@sec:export]) using a
-`probe`{.firrtl} expression, or by forwarding an existing probe reference
+`probe`{.firrtl} expression or by forwarding an existing probe reference
 ([@sec:forward]).
 
 Probe types are only allowed as part of module ports and may not appear
