@@ -1926,7 +1926,7 @@ module Top:
   val.a <= UInt<2>(1)
   val.b <= UInt<2>(2)
 
-  force(d.r, val)
+  force(d.xp, val)
 
 module DUT :
   input x : {a: UInt, flip b: UInt}
