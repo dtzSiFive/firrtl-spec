@@ -614,9 +614,9 @@ originating `export`{.firrtl} statement ([@sec:export]) using a
 Probe types are only allowed as part of module ports and may not appear
 anywhere else.
 
-Probes within vectors must be accessed using statically known index values;
-more generally, all expressions indexing to or through a probe type must not be
-dependent on dynamic values.
+Sub-accesses are not allowed with types where the result is or has probe types
+within.  This is because sub-accesses are essentially conditional connections
+(see [@sec:sub-accesses] for details), which are not allowed with probe types.
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent optionally
