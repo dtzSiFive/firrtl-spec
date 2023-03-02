@@ -642,7 +642,6 @@ Examples of input references follow.
 
 #### U-Turn Example
 
-
 ```firrtl
 module UTurn:
   input in : Probe<UInt>
@@ -667,6 +666,25 @@ In the above example, the probe of node `n`{.firrtl} is routed through two
 modules before its resolution.
 
 #### IO with references to endpoint data
+
+A primary motivation for input references is that in some situations they make
+it easier to generate the FIRRTL code.  While output references necessarily
+capture this design equivalently, this can be harder to generate and so is
+useful to support.
+
+The following demonstrates an example of this, where it's convenient to use the
+same bundle type as both output to one module and input to another, with
+references populated by both modules targeting signals of interest at each end.
+For this to be the same bundle type-- input on one and output on another -- the
+`Probe` references for each end should be output-oriented and accordingly are
+input-oriented at the other end.  It would be inconvenient to generate this
+design so that each has output references only.
+
+The `Connect` module instantiates a `Producer` and `Consumer` module,
+connects them using a bundle with references in both orientations, and forwards
+those references for inspection up the hierarchy.  The probe targets are not
+significant, here they are the same data being sent between the two, as stored
+in each module.
 
 ```firrtl
 module Consumer:
@@ -700,8 +718,8 @@ module Connect:
 module Top:
   inst c of Connect
 
-  node producer_debug = read(c.pref);
-  node consumer_debug = read(c.cref);
+  node producer_debug = read(c.pref); ; Producer-side signal
+  node consumer_debug = read(c.cref); ; Consumer-side signal
 ```
 
 ## Type Modifiers
