@@ -617,6 +617,20 @@ anywhere else.
 Sub-accesses are not allowed with types where the result is or has probe types
 within.  This is because sub-accesses are essentially conditional connections
 (see [@sec:sub-accesses] for details), which are not allowed with probe types.
+The following example demonstrates some legal and illegal expressions:
+```firrtl
+module NoSubAccessesWithProbes :
+  input x : {a : Probe<UInt[2]>, b : UInt}[3]
+  input i : UInt
+  input c : const UInt
+  output p : Probe<UInt>
+
+  ; Illegal: x[i], x[c]
+  ; Illegal: x[0].a[i], x[0].a[c]
+
+  ; Legal:
+  forward x[0].a[1] as p
+```
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent optionally
