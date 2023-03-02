@@ -253,6 +253,12 @@ extmodule MyExternalModuleWithRefs :
   ref mysignal = a.b
   ref myreg = x.y
 ```
+These resolved reference paths capture important information for use in the
+current FIRRTL design and while are part of the FIRRTL-level interface to the
+external module as not expected to correspond to a particular Verilog
+construct.  This is similar to `const`{.firrtl} ports being important details
+of the interface at the FIRRTL level but are also not expected to map to
+Verilog language constructs.
 
 ## Implementation Defined Modules (Intrinsics)
 
