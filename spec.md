@@ -675,14 +675,14 @@ useful to support.
 The following demonstrates an example of this, where it's convenient to use the
 same bundle type as both output to one module and input to another, with
 references populated by both modules targeting signals of interest at each end.
-For this to be the same bundle type-- input on one and output on another -- the
-`Probe` references for each end should be output-oriented and accordingly are
-input-oriented at the other end.  It would be inconvenient to generate this
+For this to be the same bundle type -- input on one and output on another --
+the `Probe` references for each end should be output-oriented and accordingly
+are input-oriented at the other end.  It would be inconvenient to generate this
 design so that each has output references only.
 
-The `Connect` module instantiates a `Producer` and `Consumer` module,
-connects them using a bundle with references in both orientations, and forwards
-those references for inspection up the hierarchy.  The probe targets are not
+The `Connect` module instantiates a `Producer` and `Consumer` module, connects
+them using a bundle with references in both orientations, and forwards those
+references for inspection up the hierarchy.  The probe targets are not
 significant, here they are the same data being sent between the two, as stored
 in each module.
 
