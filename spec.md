@@ -2120,7 +2120,8 @@ will be rewritten as "the port `in`{.firrtl} is connected to the port
 ### Static Reference Expressions
 
 Static references start with an identifier, optionally followed by sub-fields
-or sub-indices selecting a particular sub-element.
+or sub-indices selecting a particular sub-element.  Sub-accesses are not
+allowed.
 
 Export targets, probe expressions, and both arguments to `forward`{.firrtl}
 statements must all be static references.
