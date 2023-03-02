@@ -221,7 +221,9 @@ order, an optional _defname_ which sets the name of the external module in the
 resulting Verilog, zero or more name--value _parameter_ statements, and zero or
 more _ref_ statements indicating the resolved paths of the module's exported
 references.  Each name--value parameter statement will result in a value being
-passed to the named parameter in the resulting Verilog.
+passed to the named parameter in the resulting Verilog.  While `ref` statements
+are optional, they are required to be present if the reference is used.
+
 
 An example of an externally defined module is:
 
