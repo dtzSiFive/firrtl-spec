@@ -2416,8 +2416,10 @@ module Bar :
   x <= read(f.p.b) ; indirectly access the probed data
 ```
 
-The source of the probe must reside at or below the point of the `read`
-expression in the design hierarchy.
+The source of the probe must reside at or below the point of the
+`read`{.firrtl} expression in the design hierarchy.  See
+[@sec:invalid-input-reference] for an example of an invalid `read`{.firrtl} of
+an input reference.
 
 ## Probe
 
