@@ -581,7 +581,8 @@ possible, as read-only probes impose fewer limitations and are more amenable to
 optimization.
 
 References must always be able to be statically traced to their target, or to
-an external module's output reference.
+an external module's output reference.  This means no conditional connections
+via sub-accesses, multiplexers, or other means.
 
 ### Probe Types
 
