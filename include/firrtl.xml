@@ -150,7 +150,7 @@
         <DetectChar char="{" context="field" attribute="Separator"/>
         <DetectChar char="}" attribute="Separator" context="#pop#pop"/>
         <DetectChar char= ";" context="comment" attribute="Comment"/>
-        <AnyChar String="&gt;" attribute="Operator" context="#pop"/>
+        <AnyChar String="&gt;," attribute="Operator" context="#pop"/>
         <DetectChar char="[" attribute="Operator" context="widthOrDepthOrLit"/>
       </context>
       <context name="type" attribute="String" lineEndContext="#pop">
