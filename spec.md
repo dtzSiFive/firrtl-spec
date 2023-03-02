@@ -665,6 +665,20 @@ module RefBouncing:
 In the above example, the probe of node `n`{.firrtl} is routed through two
 modules before its resolution.
 
+#### Invalid Input Reference
+
+When using a probe reference, the target must reside at or below the point of use
+in the design hierarchy.  Input references make it possible to create designs
+where this is not the case, and such upwards references are not supported:
+
+```firrtl
+module Foo:
+   input in : Probe<UInt>
+   output out : UInt
+
+   out <= read(in)
+```
+
 #### IO with references to endpoint data
 
 A primary motivation for input references is that in some situations they make
