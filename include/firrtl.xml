@@ -19,9 +19,7 @@
       <item>wire</item>
       <item>node</item>
       <item>ref</item>
-      <item>as</item>
-      <item>export</item>
-      <item>forward</item>
+      <item>define</item>
     </list>
     <list name="types">
       <item>UInt</item>
