@@ -92,7 +92,8 @@
       <item>rwprobe</item>
       <item>force</item>
       <item>release</item>
-      <item>deposit</item>
+      <item>force_initial</item>
+      <item>release_initial</item>
     </list>
     <contexts>
       <context name="Normal Text" attribute="ID" lineEndContext="#pop">
