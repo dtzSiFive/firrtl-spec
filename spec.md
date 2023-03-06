@@ -2013,11 +2013,7 @@ module AddRefs:
 
 #### Initial Force and Initial Release
 
-The `force_initial`{.firrtl} and `release_initial`{.firrtl} statements may
-occur under `when`{.firrtl} blocks which becomes a check of the condition
-first.  Note that this condition is only checked once and if it changes will
-not stop overriding the drivers of the target.  For more control over their
-behavior, the other variants should be used.
+These variants force and release during initialization:
 
 Example:
 
@@ -2050,10 +2046,20 @@ initial begin
 end
 ```
 
-When placed under `when`{.firrtl} blocks, the condition is checked before
-applying the operation, e.g., `when c : force(ref, x)`{.firrtl} becomes
-`iniital if (c) force a.b = x;`{.systemverilog}.
-Note that once executed, changes to the condition have no impact in this form.
+The `force_initial`{.firrtl} and `release_initial`{.firrtl} statements may
+occur under `when`{.firrtl} blocks which becomes a check of the condition
+first.  Note that this condition is only checked once and changes to it
+afterwards are irrelevant.  For more control over their behavior, the other
+variants should be used.  Example:
+
+```firrtl
+when c : force(ref, x)
+```
+
+would become:
+```systemverilog
+initial if (c) force a.b = x;
+```
 
 #### Force and Release
 
