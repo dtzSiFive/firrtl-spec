@@ -2096,7 +2096,7 @@ Condition is checked in procedural block before the force, as shown above.
 When placed under `when`{.firrtl} blocks, condition is mixed in as with other
 statements (e.g., `assert`{.firrtl}).
 
-### Non-Passive Force Target
+#### Non-Passive Force Target
 
 Force on a non-passive bundle drives in the direction of each field's
 orientation.
