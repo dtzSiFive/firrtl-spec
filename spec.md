@@ -1974,19 +1974,123 @@ module ForwardDownwards :
 ### Force and Release
 
 To override existing drivers for a `RWProbe`{.firrtl}, the `force`{.firrtl}
-statement is used.  Force statements are simulation-only constructs and may not
-be supported by all implementations.
+statement is used, and released with `release`{.firrtl}.  Force statements are
+simulation-only constructs and may not be supported by all implementations.
+They are similar to the verification statements (e.g., `assert`{.firrtl}) in
+this regard.
 
-These statements require `RWProbe`-type targets.
+These are two variants of each, enumerated below:
 
-* `force(clock, condition, refDst, value)`{.firrtl}: always posedge clock
-* `force(refDst, value)`{.firrtl}: initial
+| Name            | Arguments                    | Argument Types                                                   |
+|-----------------|------------------------------|----------------------------------------                          |
+| force_initial   | (ref, val)                   | (`RWProbe<T>`{.firrtl}, T)                                       |
+| release_initial | (ref)                        | (`RWProbe<T>`{.firrtl})                                          |
+| force           | (clock, condition, ref, val) | (`Clock`{.firrtl}, `UInt<1>`{.firrtl}, `RWProbe<T>`{.firrtl}, T) |
+| release         | (clock, condition, ref)      | (`Clock`{.firrtl}, `UInt<1>`{.firrtl}, `RWProbe<T>`{.firrtl})    |
 
-Condition is checked in procedural block before the force.  When placed under
-`when`{.firrtl} blocks, condition is mixed in as with other statements (e.g.,
-`assert`{.firrtl}).
+Backends optionally generate corresponding constructs in the target language,
+or issue an warning.
 
-Each `force`{.firrtl} variant has an matching `release`{.firrtl} equivalent.
+The following `AddRefs`{.firrtl} module is used in the examples that follow for
+each construct.
+
+```firrtl
+module AddRefs:
+  output a : RWProbe<UInt<2>>
+  output b : RWProbe<UInt<2>>
+  output c : RWProbe<UInt<2>>
+  output sum : UInt<3>
+
+  node x = Uint<2>(0)
+  node y : UInt<2>(0)
+  node z : UInt<2>(0)
+  sum <= add(x, add(y, z))
+
+  define a = rwprobe(x)
+  define b = rwprobe(y)
+  define c = rwprobe(z)
+```
+
+#### Initial Force and Initial Release
+
+The `force_initial`{.firrtl} and `release_initial`{.firrtl} statements may
+occur under `when`{.firrtl} blocks which becomes a check of the condition
+first.  Note that this condition is only checked once and if it changes will
+not stop overriding the drivers of the target.  For more control over their
+behavior, the other variants should be used.
+
+Example:
+
+```firrtl
+module ForceAndRelease:
+  output o : UInt<3>
+
+  inst r of AddRefs
+  o <= r.sum
+
+  force_initial(r.a, 0)
+  force_initial(r.a, 1)
+  force_initial(r.b, 2)
+  force_initial(r.c, 3)
+  release_initial(r.c)
+```
+
+In this example, the output `o`{.firrtl} will be `3`.
+Note that globally the last `force` statement overrides the others.
+
+Sample SystemVerilog output for the force and release statements would be:
+
+```SystemVerilog
+initial begin
+  force ForceAndRelease.AddRefs.x = 0;
+  force ForceAndRelease.AddRefs.x = 1;
+  force ForceAndRelease.AddRefs.y = 2;
+  force ForceAndRelease.AddRefs.z = 3;
+  release ForceAndRelease.AddRefs.z;
+end
+```
+
+When placed under `when`{.firrtl} blocks, the condition is checked before
+applying the operation, e.g., `when c : force(ref, x)`{.firrtl} becomes
+`iniital if (c) force a.b = x;`{.systemverilog}.
+Note that once executed, changes to the condition have no impact in this form.
+
+#### Force and Release
+
+The more powerful variants allow specifying a clock and condition as well:
+
+```firrtl
+module ForceAndRelease:
+  input a: UInt<2>
+  input clock : Clock
+  input cond : UInt<1>
+  output o : UInt<3>
+
+  inst r of AddRefs
+  o <= r.sum
+
+  force(clock, c, r.a, a)
+  release(clock, not(c), r.a)
+```
+
+Which at the positive edge of `clock` will either force or release `AddRefs.x`.
+
+Sample SystemVerilog output:
+
+```SystemVerilog
+always (@posedge clock) begin
+  if (c)
+    force ForceAndRelease.AddRefs.x = a;
+  else
+    release ForceAndRelease.AddRefs.x;
+end
+```
+
+Condition is checked in procedural block before the force, as shown above.
+When placed under `when`{.firrtl} blocks, condition is mixed in as with other
+statements (e.g., `assert`{.firrtl}).
+
+### Non-Passive Force Target
 
 Force on a non-passive bundle drives in the direction of each field's
 orientation.
@@ -2014,7 +2118,7 @@ module DUT :
   output y : {a: UInt, flip b: UInt}
   output xp : RWProbe<{a: UInt, b: UInt}>
 
-  ; Force drives y.a and x.b, but not y.b and x.a
+  ; Force drives p.a, p.b, y.a, and x.b, but not y.b and x.a
   wire p : {a: UInt, flip b: UInt}
   define xp = rwprobe(p)
   p <= x
