@@ -1919,7 +1919,7 @@ module RefProducer :
     define thereg = probe(myreg)
 ```
 
-### Forwarding References Upwards
+#### Forwarding References Upwards
 
 Define statements can be used to forward a child module's reference further up
 the hierarchy:
@@ -1949,6 +1949,26 @@ module Forward :
 
   inst f of Foo
   define p = f.p[0][1]
+```
+
+#### Forwarding References Downwards
+
+Define statements can also be used to forward references down the hierarchy
+using input reference-type ports, which are allowed but should be used
+carefully as they make it possible to express
+invalid reference paths.
+
+See [@sec:input-references] for more details, a small example is given below:
+
+```firrtl
+module UnusedInputRef :
+  input r : Probe<UInt<1>>
+
+module ForwardDownwards :
+  input in : UInt<1>
+
+  inst u of UnusedInputRef
+  define u.r = probe(in)
 ```
 
 ### Force and Release
