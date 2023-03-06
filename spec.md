@@ -252,8 +252,8 @@ extmodule MyExternalModuleWithRefs :
   input foo : UInt<2>
   output mysignal : Probe<UInt<1>>
   output myreg : RWProbe<UInt<8>>
-  ref mysignal = a.b
-  ref myreg = x.y
+  ref mysignal is "a.b"
+  ref myreg is "x.y"
 ```
 These resolved reference paths capture important information for use in the
 current FIRRTL design and while are part of the FIRRTL-level interface to the
@@ -3486,12 +3486,13 @@ extmodule = "extmodule" , id , ":" , [ info ] , newline , indent ,
               { port , newline } ,
               [ "defname" , "=" , id , newline ] ,
               { "parameter" , id , "=" , ( string | int ) , newline } ,
+              { "ref" , static_reference , "is" ,
+                '"' , static_reference , '"' , newline } ,
             dedent ;
 intmodule = "intmodule" , id , ":" , [ info ] , newline , indent ,
               { port , newline } ,
               "intrinsic" , "=" , id , newline ,
               { "parameter" , "=" , ( string | int ) , newline } ,
-              { "ref" , static_reference , "=" , static_reference , newline } ,
             dedent ;
 
 (* In-line Annotations *)
