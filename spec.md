@@ -256,11 +256,10 @@ extmodule MyExternalModuleWithRefs :
   ref myreg is "x.y"
 ```
 These resolved reference paths capture important information for use in the
-current FIRRTL design and while are part of the FIRRTL-level interface to the
-external module as not expected to correspond to a particular Verilog
-construct.  This is similar to `const`{.firrtl} ports being important details
-of the interface at the FIRRTL level but are also not expected to map to
-Verilog language constructs.
+current FIRRTL design. While they are part of the FIRRTL-level interface to the
+external module, they are not expected to correspond to a particular Verilog
+construct. They exist to carry information about the implementation of the
+extmodule necessary for code generation of the current circuit.
 
 ## Implementation Defined Modules (Intrinsics)
 
