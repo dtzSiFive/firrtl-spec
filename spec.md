@@ -1118,7 +1118,8 @@ sub-element in the vector.
 Invalidating a component with a bundle type recursively invalidates each
 sub-element in the bundle.
 
-Invalidating a component with a reference type has no effect.
+Components of reference and analog type are ignored, as are any reference or
+analog types within the component (as they cannot be connected to).
 
 ## Attaches
 
