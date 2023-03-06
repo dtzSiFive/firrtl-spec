@@ -3304,7 +3304,8 @@ static_reference = id
                  | static_reference , "[" , int , "]" ;
 reference = static_reference
           | reference , "[" , expr , "]" ;
-ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")" ;
+ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")"
+           | static_reference ;
 
 (* Memory *)
 ruw = ( "old" | "new" | "undefined" ) ;
@@ -3342,8 +3343,7 @@ statement = "wire" , id , ":" , type , [ info ]
           | "printf(" , expr , "," , expr , "," , string ,
             { expr } , ")" , [ ":" , id ] , [ info ]
           | "skip" , [ info ]
-          | "export" , ref_expr , "as" , static_reference , [ info ]
-          | "forward" , static_reference , "as" , static_reference , [ info ]
+          | "define" , static_reference , "=" , ref_expr , [ info ]
           | force_release , [ info ] ;
 
 (* Module definitions *)
