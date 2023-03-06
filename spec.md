@@ -568,7 +568,7 @@ target language and are omitted in the compiled design; they only exist at the
 FIRRTL level.
 
 Reference-type ports are statically routed through the design using the
-`forward`{.firrtl} and `export`{.firrtl} statements.
+`define`{.firrtl} statement.
 
 There are two reference types, `Probe`{.firrtl} and `RWProbe`{.firrtl},
 described below.  These are used for indirect access to probes of the data
@@ -609,10 +609,8 @@ RWProbe<{x: {y: UInt}}> ; readable and forceable reference to bundle
 For details of how to read and write through probe types, see
 [@sec:reading-probe-references;@sec:force-and-release].
 
-All ports of probe type must be initialized with exactly one statement: an
-originating `export`{.firrtl} statement ([@sec:export]) using a
-`probe`{.firrtl} expression or by forwarding an existing probe reference
-([@sec:forward]).
+All ports of probe type must be initialized with exactly one `define`{.firrtl}
+statement.
 
 Probe types are only allowed as part of module ports and may not appear
 anywhere else.
@@ -632,7 +630,7 @@ module NoSubAccessesWithProbes :
   ; Illegal: x[0].a[i], x[0].a[c]
 
   ; Legal:
-  forward x[0].a[1] as p
+  define p = x[0].a[1]
 ```
 
 Probe types may be specified as part of an external module (see
@@ -663,7 +661,7 @@ Examples of input references follow.
 module UTurn:
   input in : Probe<UInt>
   output out : Probe<UInt>
-  forward in as out
+  define out = in
 
 module RefBouncing:
   input x: UInt
@@ -673,8 +671,8 @@ module RefBouncing:
   inst u2 of UTurn
 
   node n = x
-  export probe(n) as u1.in
-  forward u1.out as u2.in
+  define u1.in = probe(n)
+  define u2.in = u1.out
 
   out <= read(u2.out) ; = x
 ```
@@ -722,12 +720,12 @@ module Consumer:
   input in : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
   ; ...
   node n = in.a
-  export probe(n) as in.cref
+  define in.cref = probe(n)
 
 module Producer:
   output out : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
   wire x : UInt
-  export probe(x) as out.pref
+  define out.pref = probe(x)
   ; ...
   out.a <= x
 
@@ -739,12 +737,12 @@ module Connect:
 
   ; A => B
   a.in.a <= b.out.a
-  forward b.out.pref as a.in.pref
-  forward a.in.cref as b.out.cref
+  define a.in.pref = b.out.pref
+  define b.out.cref = a.in.cref
 
   ; Send references out
-  forward b.out.pref as out.pref
-  forward a.in.cref as out.cref
+  define out.pref = b.out.pref
+  define out.cref = a.in.cref
 
 module Top:
   inst c of Connect
@@ -1821,23 +1819,26 @@ cover(clk, pred, en, "X equals Y when Z is valid") : optional_name
 
 ## Probes
 
-Probe references are created with `probe`{.firrtl} expressions, exported with
-the `export`{.firrtl} statement, forwarded between instances using the
-`forward`{.firrtl} statement, read using the `read`{.firrtl} expression (see
-[@sec:reading-probe-references]), and forced and released with `force`{.firrtl}
-and `release`{.firrtl} statements.
-
-Export and forward are used to route references through the design, and may be
-used wherever is most convenient in terms of available identifiers.  Every
-sink-flow probe must be the target of exactly one of these statements.
+Probe references are created with `probe`{.firrtl} expressions, routed through
+the design using the `define`{.firrtl} statement, read using the
+`read`{.firrtl} expression (see [@sec:reading-probe-references]), and forced
+and released with `force`{.firrtl} and `release`{.firrtl} statements.
 
 These statements are detailed below.
 
-### Export
+### Define
 
-The export statement takes a reference expression, which must be a probe
-expression, and exports the probe reference to into a sink-flow static
-reference target.
+Define statements are used to route references through the design, and may be
+used wherever is most convenient in terms of available identifiers -- their
+location is not significant other than scoping, and do not have last-connect
+semantics.  Every sink-flow probe must be the target of exactly one of these
+statements.
+
+The define statement takes a sink-flow static reference target and sets
+it to the specified reference, which must either be a probe
+expression, or a static reference source.
+
+Example:
 
 ```firrtl
 module Refs:
@@ -1849,23 +1850,23 @@ module Refs:
   output e : Probe<Clock> ; ref. to input clock port
 
   wire p : {x: UInt, flip y : UInt}
-  export probe(p) as a ; probe is passive
+  define a = probe(p) ; probe is passive
   node q = UInt<1>(0)
-  export rwprobe(q) as b
+  define b = rwprobe(q)
   reg r: UInt, clock
-  export probe(r) as c
+  define c = probe(r)
   mem m:
     data-type => UInt<5>
     depth => 4
     ; ...
     read-under-write => undefined
 
-  export rwprobe(m) as d
-  export probe(clock) as e
+  define d = rwprobe(m)
+  define e = probe(clock)
 ```
 
-Exporting to a field within a bundle or other statically known sub-element of
-an aggregate is allowed, for example:
+The target is not required to be only an identifier, it may be a field within a
+bundle or other statically known sub-element of an aggregate, for example:
 
 ```firrtl
 module Foo:
@@ -1877,9 +1878,9 @@ module Foo:
   w <= x
   y.x <= w
 
-  export probe(w) as y.p
-  export probe(w) as z[0]
-  export probe(w) as z[1]
+  define y.p = probe(w)
+  define z[0] = probe(w)
+  define z[1] = probe(w)
 ```
 
 `RWProbe`{.firrtl} references to ports are not allowed on public-facing
@@ -1887,8 +1888,8 @@ modules.
 
 #### Probes and Passive Types
 
-While `Probe`{.firrtl} inner types are passive, the type of the exported
-expression is not required to be:
+While `Probe`{.firrtl} inner types are passive, the type of the probed
+static reference is not required to be:
 
 ```firrtl
 module Foo :
@@ -1897,7 +1898,7 @@ module Foo :
   output xp : Probe<{a: UInt, b: UInt}> ; passive
 
   wire p : {a: UInt, flip b: UInt} ; p is not passive
-  export probe(p) as xp
+  define xp = probe(p)
   p <= x
   y <= p
 ```
@@ -1915,15 +1916,13 @@ module RefProducer :
   when en :
     reg myreg : UInt, clk
     myreg <= a
-    export probe(myreg) as thereg
+    define thereg = probe(myreg)
 ```
 
-### Forward
+### Forwarding References Upwards
 
-The forward statement is similar to export but forwards an existing reference
-to the specified target.
-
-This can be used to pass a child module's reference further up the hierarchy:
+Define statements can be used to forward a child module's reference further up
+the hierarchy:
 
 ```firrtl
 module Foo :
@@ -1934,13 +1933,10 @@ module Forward :
   output p : Probe<UInt>
 
   inst f of Foo
-  forward f.p as p
+  define p = f.p
 ```
 
-The forwarded expression and the export target must both be static expressions,
-and like the export statement do not participate in last-connect semantics.
-
-Forward statements may narrow a probe of an aggregate to a sub-element using
+Define statements may narrow a probe of an aggregate to a sub-element using
 static expression:
 
 ```firrtl
@@ -1952,7 +1948,7 @@ module Forward :
   output p : Probe<UInt>
 
   inst f of Foo
-  forward f.p[0][1] as p
+  define p = f.p[0][1]
 ```
 
 ### Force and Release
@@ -1960,6 +1956,8 @@ module Forward :
 To override existing drivers for a `RWProbe`{.firrtl}, the `force`{.firrtl}
 statement is used.  Force statements are simulation-only constructs and may not
 be supported by all implementations.
+
+These statements require `RWProbe`-type targets.
 
 * `force(clock, condition, refDst, value)`{.firrtl}: always posedge clock
 * `force(refDst, value)`{.firrtl}: initial
@@ -1998,7 +1996,7 @@ module DUT :
 
   ; Force drives y.a and x.b, but not y.b and x.a
   wire p : {a: UInt, flip b: UInt}
-  export rwprobe(p) as xp
+  define xp = rwprobe(p)
   p <= x
   y <= p
 ```
@@ -2140,8 +2138,9 @@ Static references start with an identifier, optionally followed by sub-fields
 or sub-indices selecting a particular sub-element.  Sub-accesses are not
 allowed.
 
-Export targets, probe expressions, and both arguments to `forward`{.firrtl}
-statements must all be static references.
+Define statements must have static references as their target, and their source
+must be either a static reference or a probe expression whose argument
+is a static reference.
 
 ## Sub-fields
 
@@ -2443,7 +2442,7 @@ module MyModule :
   input in: UInt
   output r : Probe<UInt>
 
-  export probe(in) as r
+  define r = probe(in)
 ```
 
 The probed expression must be a static reference.
