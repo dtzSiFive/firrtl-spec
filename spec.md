@@ -2084,7 +2084,7 @@ Which at the positive edge of `clock` will either force or release `AddRefs.x`.
 Sample SystemVerilog output:
 
 ```SystemVerilog
-always (@posedge clock) begin
+always @(posedge clock) begin
   if (c)
     force ForceAndRelease.AddRefs.x = a;
   else
