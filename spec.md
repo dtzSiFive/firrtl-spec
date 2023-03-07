@@ -645,9 +645,10 @@ internally, as described in this section.
 
 Input probe references are allowed on internal modules, but they should be used
 with care because they make it possible to express invalid reference paths.
-When probe references are resolved they must target a single element at or
-below the resolution point.  Support for other scenarios are allowed as
-determined by the implementation.
+When probe references are used to access the underlying data (e.g., with a
+`read`{.firrtl} or `force`{.firrtl}), they must target a statically known
+element at or below the point of that use.  Support for other scenarios are
+allowed as determined by the implementation.
 
 Input references are not allowed on public-facing modules: e.g., the top module
 and external modules.
