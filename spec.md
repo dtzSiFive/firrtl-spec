@@ -2013,7 +2013,7 @@ module AddRefs:
 
 #### Initial Force and Initial Release
 
-These variants force and release during initialization:
+These variants force and release continuously:
 
 Example:
 
@@ -2031,8 +2031,9 @@ module ForceAndRelease:
   release_initial(r.c)
 ```
 
-In this example, the output `o`{.firrtl} will be `3`.
-Note that globally the last `force` statement overrides the others.
+In this example, the output `o`{.firrtl} will be `3`.  Note that globally the
+last force statement overrides the others until another force or release
+including the target.
 
 Sample SystemVerilog output for the force and release statements would be:
 
@@ -2049,7 +2050,8 @@ end
 The `force_initial`{.firrtl} and `release_initial`{.firrtl} statements may
 occur under `when`{.firrtl} blocks which becomes a check of the condition
 first.  Note that this condition is only checked once and changes to it
-afterwards are irrelevant.  For more control over their behavior, the other
+afterwards are irrelevant, and if executed the `force`{.systemverilog} will
+continue to be active.  For more control over their behavior, the other
 variants should be used.  Example:
 
 ```firrtl
@@ -2063,7 +2065,8 @@ initial if (c) force a.b = x;
 
 #### Force and Release
 
-The more powerful variants allow specifying a clock and condition as well:
+These more detailed variants allow specifying a clock and condition for when
+activating the force or release behavior continuously:
 
 ```firrtl
 module ForceAndRelease:
@@ -2080,6 +2083,8 @@ module ForceAndRelease:
 ```
 
 Which at the positive edge of `clock` will either force or release `AddRefs.x`.
+Note that once active, these remain active regardless of the condition,
+until another `force` or `release`.
 
 Sample SystemVerilog output:
 
