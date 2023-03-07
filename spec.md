@@ -2055,8 +2055,7 @@ continue to be active.  For more control over their behavior, the other
 variants should be used.  Example:
 
 ```firrtl
-when c : force(ref, x)
-```
+when c : force_initial(ref, x)
 
 would become:
 ```systemverilog
