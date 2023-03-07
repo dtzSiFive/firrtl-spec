@@ -2050,7 +2050,7 @@ end
 The `force_initial`{.firrtl} and `release_initial`{.firrtl} statements may
 occur under `when`{.firrtl} blocks which becomes a check of the condition
 first.  Note that this condition is only checked once and changes to it
-afterwards are irrelevant, and if executed the `force`{.systemverilog} will
+afterwards are irrelevant, and if executed the force will
 continue to be active.  For more control over their behavior, the other
 variants should be used.  Example:
 
@@ -2082,9 +2082,9 @@ module ForceAndRelease:
   release(clock, not(c), r.a)
 ```
 
-Which at the positive edge of `clock` will either force or release `AddRefs.x`.
-Note that once active, these remain active regardless of the condition,
-until another `force` or `release`.
+Which at the positive edge of `clock`{.firrtl} will either force or release
+`AddRefs.x`{.firrtl}.  Note that once active, these remain active regardless of
+the condition, until another force or release.
 
 Sample SystemVerilog output:
 
