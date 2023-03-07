@@ -3462,10 +3462,11 @@ memory = "mem" , id , ":" , [ info ] , newline , indent ,
          dedent ;
 
 (* Force and Release *)
-force_release_ops = "force(" | "release(" ;
-force_release = force_release_ops ,
-                  [ expr , "," , expr , "," ] ,
-                  static_reference , "," , expr , ")" ;
+force_release =
+    "force_initial" , "(" , ref_expr , "," , expr , ")"
+  | "release_initial" , "(" , ref_expr , ")"
+  | "force" , "(" , expr , "," , expr , "," , ref_expr , "," , expr , ")"
+  | "release" , "(" , expr , "," , expr , "," , ref_expr , ")" ;
 
 (* Statements *)
 statement = "wire" , id , ":" , type , [ info ]
