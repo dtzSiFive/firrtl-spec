@@ -2550,6 +2550,13 @@ module Bar :
   x <= read(f.p.b) ; indirectly access the probed data
 ```
 
+Read operations can be used anywhere a signal of the same underlying
+type can be used, such as the following:
+
+```firrtl
+  x <= add(read(f.p).a, read(f.p).b)
+```
+
 The source of the probe must reside at or below the point of the
 `read`{.firrtl} expression in the design hierarchy.  See
 [@sec:invalid-input-reference] for an example of an invalid `read`{.firrtl} of
