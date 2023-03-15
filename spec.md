@@ -285,11 +285,11 @@ intmodule MyIntrinsicModule_xhello_y64 :
 
 # Types
 
-FIRRTL has three classes of types: _ground_ types, _aggregate_ types, and
-_reference_ types.  Ground types are fundamental and are not composed of other
-types.  Aggregate types and reference types are composed of one or more
-aggregate or ground types.  Reference types may not contain other reference
-types.
+FIRRTL has two classes of hardware types: _ground_ types and _aggregate_ types,
+and a class of non-hardware types: _reference_ types.  Ground types are
+fundamental and are not composed of other types.  Aggregate types and reference
+types are composed of one or more aggregate or ground types.  Reference types
+may not contain other reference types.
 
 ## Ground Types
 
@@ -589,10 +589,10 @@ Probe types are reference types used to access circuit elements' data remotely.
 There are two probe types: `Probe`{.firrtl} and `RWProbe`{.firrtl}.
 `RWProbe`{.firrtl} is a `Probe`{.firrtl} type, but not the other way around.
 
-Probe types are parametric over the type of data that they refer to, which is
-always passive (as defined in [@sec:passive-types]) even when the probed target
-is not (see [@sec:probes-and-passive-types]).  Probe types cannot contain
-reference types.
+Probe types are parametric over the base type of data that they refer to, which
+is always passive (as defined in [@sec:passive-types]) even when the probed
+target is not (see [@sec:probes-and-passive-types]).  Probe types cannot
+contain reference types.
 
 Conceptually probe types are single-direction views of the probed data-flow
 point.  They are references to the data accessed with the probe expression
@@ -611,26 +611,11 @@ For details of how to read and write through probe types, see
 All ports of probe type must be initialized with exactly one `define`{.firrtl}
 statement.
 
-Probe types are only allowed as part of module ports and may not appear
-anywhere else.
+Probe types are only allowed as output module ports and may not appear anywhere
+else.
 
-Sub-accesses are not allowed with types where the result is or has probe types
-within.  This is because sub-accesses are essentially conditional connections
-(see [@sec:sub-accesses] for details), which are not allowed with probe types.
-The following example demonstrates some legal and illegal expressions:
-```firrtl
-module NoSubAccessesWithProbes :
-  input x : {a : Probe<UInt[2]>, b : UInt}[3]
-  input i : UInt
-  input c : const UInt
-  output p : Probe<UInt>
-
-  ; Illegal: x[i], x[c]
-  ; Illegal: x[0].a[i], x[0].a[c]
-
-  ; Legal:
-  define p = x[0].a[1]
-```
+Probe types cannot be contained within hardware types, including bundles,
+with the sole exception of their presence in instance bundles.
 
 Probe types may be specified as part of an external module (see
 [@sec:externally-defined-modules]), with the resolved referent for each
@@ -674,158 +659,6 @@ circuit ResetInferGood :
     output out2 : AsyncReset
     out <= read(probe(in))
     out2 <= in
-```
-
-### Input Probe References
-
-Probe references are generally forwarded up the design hierarchy, being used to
-reach down into design internals from a higher point.  As a result probe-type
-references are most often output ports, but may also be used on input ports
-internally, as described in this section.
-
-Input probe references are allowed on internal modules, but they should be used
-with care because they make it possible to express invalid or multiple
-reference paths.  When probe references are used to access the underlying data
-(e.g., with a `read`{.firrtl} or `force`{.firrtl}), they must target a
-statically known element at or below the point of that use, in all contexts.
-Support for other scenarios are allowed as determined by the implementation.
-
-Input probe references are not allowed on public-facing modules: e.g., the top
-module and external modules.
-
-Examples of input probe references follow.
-
-#### U-Turn Example
-
-```firrtl
-module UTurn:
-  input in : Probe<UInt>
-  output out : Probe<UInt>
-  define out = in
-
-module RefBouncing:
-  input x: UInt
-  output y: UInt
-
-  inst u1 of UTurn
-  inst u2 of UTurn
-
-  node n = x
-  define u1.in = probe(n)
-  define u2.in = u1.out
-
-  out <= read(u2.out) ; = x
-```
-
-In the above example, the probe of node `n`{.firrtl} is routed through two
-modules before its resolution.
-
-#### Invalid Input Reference
-
-When using a probe reference, the target must reside at or below the point of use
-in the design hierarchy.  Input references make it possible to create designs
-where this is not the case, and such upwards references are not supported:
-
-```firrtl
-module Foo:
-  input in : Probe<UInt>
-  output out : UInt
-
-  out <= read(in)
-```
-
-Even when the target resolves at or below, the path must be the same in all
-contexts so a single description of the module may be generated.
-
-The following example demonstrates such an invalid use of probe references:
-
-```firrtl
-circuit Top:
-  module Top:
-    input in : UInt<4>
-    output out : UInt
-
-    inst ud1 of UpDown
-    ud1.in <= in
-    define ud1.in_ref = ud1.r1
-
-    inst ud2 of UpDown
-    ud2.in <= in
-    define ud2.in_ref = ud2.r2
-
-    out <= add(ud1.out, ud2.out)
-
-  module UpDown:
-    input in : UInt<4>
-    input in_ref : Probe<UInt<4>>
-    output r1 : Probe<UInt<4>>
-    output r2 : Probe<UInt<4>>
-    output out : UInt
-
-    ; In ud1, this is UpDown.n1, in ud2 this is UpDown.n2 .
-    ; However, this is not supported as it cannot be both at once.
-    out <= read(in_ref)
-    node n1 = and(in, UInt<4>(1))
-    node n2 = and(in, UInt<4>(3))
-    define r1 = probe(n1)
-    define r2 = probe(n2)
-```
-
-#### IO with references to endpoint data
-
-A primary motivation for input probe references is that in some situations they
-make it easier to generate the FIRRTL code.  While output references
-necessarily capture this design equivalently, this can be harder to generate
-and so is useful to support.
-
-The following demonstrates an example of this, where it's convenient to use the
-same bundle type as both output to one module and input to another, with
-references populated by both modules targeting signals of interest at each end.
-For this to be the same bundle type -- input on one and output on another --
-the `Probe` references for each end should be output-oriented and accordingly
-are input-oriented at the other end.  It would be inconvenient to generate this
-design so that each has output probe references only.
-
-The `Connect` module instantiates a `Producer` and `Consumer` module, connects
-them using a bundle with references in both orientations, and forwards those
-references for inspection up the hierarchy.  The probe targets are not
-significant, here they are the same data being sent between the two, as stored
-in each module.
-
-```firrtl
-module Consumer:
-  input in : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
-  ; ...
-  node n = in.a
-  define in.cref = probe(n)
-
-module Producer:
-  output out : {a: UInt, pref: Probe<UInt>, flip cref: Probe<UInt>}
-  wire x : UInt
-  define out.pref = probe(x)
-  ; ...
-  out.a <= x
-
-module Connect:
-  output out : {x: Probe<UInt>, y: Probe<UInt>}
-
-  inst a of A
-  inst b of B
-
-  ; A => B
-  a.in.a <= b.out.a
-  define a.in.pref = b.out.pref
-  define b.out.cref = a.in.cref
-
-  ; Send references out
-  define out.pref = b.out.pref
-  define out.cref = a.in.cref
-
-module Top:
-  inst c of Connect
-
-  node producer_debug = read(c.pref); ; Producer-side signal
-  node consumer_debug = read(c.cref); ; Consumer-side signal
 ```
 
 ## Type Modifiers
@@ -1936,23 +1769,8 @@ module Refs:
   define d = probe(clock)
 ```
 
-The target is not required to be only an identifier, it may be a field within a
-bundle or other statically known sub-element of an aggregate, for example:
-
-```firrtl
-module Foo:
-  input x : UInt
-  output y : {x: UInt, p: Probe<UInt>}
-  output z : Probe<UInt>[2]
-
-  wire w : UInt
-  w <= x
-  y.x <= w
-
-  define y.p = probe(w)
-  define z[0] = probe(w)
-  define z[1] = probe(w)
-```
+The target is required to be only an identifier or a single sub-field
+access to an existing reference.
 
 `RWProbe`{.firrtl} references to ports are not allowed on public-facing
 modules.
@@ -2020,34 +1838,14 @@ static expression:
 
 ```firrtl
 module Foo :
-  output p : Probe<UInt[2]>[2]
+  output p : Probe<UInt[2]>
   ; ...
 
 module Forward :
   output p : Probe<UInt>
 
   inst f of Foo
-  define p = f.p[0][1]
-```
-
-#### Forwarding References Downwards
-
-Define statements can also be used to forward references down the hierarchy
-using input reference-type ports, which are allowed but should be used
-carefully as they make it possible to express
-invalid reference paths.
-
-See [@sec:input-probe-references] for more details, a small example is given below:
-
-```firrtl
-module UnusedInputRef :
-  input r : Probe<UInt<1>>
-
-module ForwardDownwards :
-  input in : UInt<1>
-
-  inst u of UnusedInputRef
-  define u.r = probe(in)
+  define p = f.p[1]
 ```
 
 ### Force and Release
@@ -2636,10 +2434,8 @@ type can be used, such as the following:
 ```
 
 The source of the probe must reside at or below the point of the
-`read`{.firrtl} expression in the design hierarchy.  See
-[@sec:invalid-input-reference] for an example of an invalid `read`{.firrtl} of
-an input reference.
-
+`read`{.firrtl} expression in the design hierarchy, which is ensured through
+restricting them to output ports.
 ## Probe
 
 Probe references are generated with probe expressions.
@@ -3482,10 +3278,11 @@ width = "<" , int , ">" ;
 type_ground = "Clock" | "Reset" | "AsyncReset"
             | ( "UInt" | "SInt" | "Analog" ) , [ width ] ;
 type_aggregate = "{" , field , { field } , "}"
-               | type , "[" , int , "]" ;
-type_ref = ( "Probe" | "RWProbe" ) , "<", type , ">" ;
-field = [ "flip" ] , id , ":" , type ;
-type = ( [ "const" ] , ( type_ground | type_aggregate ) ) | type_ref ;
+               | type_base , "[" , int , "]" ;
+type_ref = ( "Probe" | "RWProbe" ) , "<", type_base , ">" ;
+field = [ "flip" ] , id , ":" , type_base ;
+type_base = [ "const" ] , ( type_ground | type_aggregate )
+type = type_ref | type_base ;
 
 (* Primitive operations *)
 primop_2expr_keyword =
@@ -3529,7 +3326,7 @@ ref_expr = ( "probe" | "rwprobe" ) , "(" , static_reference , ")"
 (* Memory *)
 ruw = ( "old" | "new" | "undefined" ) ;
 memory = "mem" , id , ":" , [ info ] , newline , indent ,
-           "data-type" , "=>" , type , newline ,
+           "data-type" , "=>" , type_base , newline ,
            "depth" , "=>" , int , newline ,
            "read-latency" , "=>" , int , newline ,
            "write-latency" , "=>" , int , newline ,
@@ -3547,8 +3344,8 @@ force_release =
   | "release" , "(" , expr , "," , expr , "," , ref_expr , ")" ;
 
 (* Statements *)
-statement = "wire" , id , ":" , type , [ info ]
-          | "reg" , id , ":" , type , expr ,
+statement = "wire" , id , ":" , type_base , [ info ]
+          | "reg" , id , ":" , type_base , expr ,
             [ "with" , ":" , "(" , "reset" , "=>" ,
               "(" , expr , "," , expr , ")", ")" ] ,
             [ info ]
