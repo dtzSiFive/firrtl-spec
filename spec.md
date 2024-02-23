@@ -104,8 +104,8 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input foo: UInt
-    output bar: UInt
+    input foo: UInt<3>
+    output bar: UInt<3>
     connect bar, foo
   ;; snippetend
 ```
@@ -1157,7 +1157,7 @@ circuit Foo:
     ;; snippetbegin
     input a : UInt<1>
     output y : AsyncReset
-    output z : Reset
+    output z : UInt<1>
     wire r : Reset
     connect r, a
     connect y, asAsyncReset(r)
@@ -1245,8 +1245,8 @@ FIRRTL version 4.0.0
 circuit MyModule :
   ;; snippetbegin
   module MyModule :
-    input myinput: UInt
-    output myoutput: UInt
+    input myinput: UInt<2>
+    output myoutput: UInt<2>
     connect myoutput, myinput
   ;; snippetend
 ```
@@ -1285,10 +1285,10 @@ FIRRTL version 4.0.0
 circuit MyModule :
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
-    output myport1: UInt
-    output myport2: UInt
+    input a: UInt<5>
+    input b: UInt<5>
+    output myport1: UInt<5>
+    output myport2: UInt<5>
 
     connect myport1, a
     connect myport1, b
@@ -1308,9 +1308,9 @@ FIRRTL version 4.0.0
 circuit MyModule :
   ;; snippetbegin
   module MyModule :
-    input portx: {b: UInt, c: UInt}
-    input porty: UInt
-    output myport: {b: UInt, c: UInt}
+    input portx: {b: UInt<1>, c: UInt<2>}
+    input porty: UInt<1>
+    output myport: {b: UInt<1>, c: UInt<2>}
     connect myport, portx
     connect myport.b, porty
   ;; snippetend
@@ -1323,9 +1323,9 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input portx: {b: UInt, c: UInt}
-    input porty: UInt
-    output myport: {b: UInt, c: UInt}
+    input portx: {b: UInt<1>, c: UInt<2>}
+    input porty: UInt<2>
+    output myport: {b: UInt<1>, c: UInt<2>}
     connect myport.b, porty
     connect myport.c, portx.c
   ;; snippetend
@@ -1338,9 +1338,9 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input portx: {b: UInt, c: UInt}
-    input porty: UInt
-    output myport: {b: UInt, c: UInt}
+    input portx: {b: UInt<1>, c: UInt<2>}
+    input porty: UInt<2>
+    output myport: {b: UInt<1>, c: UInt<2>}
     connect myport.b, porty
     connect myport, portx
   ;; snippetend
@@ -1353,9 +1353,9 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input portx: {b: UInt, c: UInt}
-    input porty: UInt
-    output myport: {b: UInt, c: UInt}
+    input portx: {b: UInt<1>, c: UInt<2>}
+    input porty: UInt<1>
+    output myport: {b: UInt<1>, c: UInt<2>}
     connect myport, portx
   ;; snippetend
 ```
@@ -1389,9 +1389,9 @@ FIRRTL version 4.0.0
 circuit MyModule :
   ;; snippetbegin
   module MyModule :
-    input in: {flip a: UInt, b: UInt}
-    output out: {flip a: UInt, b: UInt}
-    wire w: {flip a: UInt, b: UInt}
+    input in: {flip a: UInt<1>, b: UInt<2>}
+    output out: {flip a: UInt<1>, b: UInt<2>}
+    wire w: {flip a: UInt<1>, b: UInt<2>}
     invalidate in
     invalidate out
     invalidate w
@@ -1405,9 +1405,9 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input in: {flip a: UInt, b: UInt}
-    output out: {flip a: UInt, b: UInt}
-    wire w: {flip a: UInt, b: UInt}
+    input in: {flip a: UInt<1>, b: UInt<2>}
+    output out: {flip a: UInt<1>, b: UInt<2>}
+    wire w: {flip a: UInt<1>, b: UInt<2>}
     invalidate in.a
     invalidate out.b
     invalidate w.a
@@ -1657,8 +1657,8 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
+    input a: UInt<3>
+    input b: UInt<3>
     input en: UInt<1>
     wire x: UInt
     when en :
@@ -1679,8 +1679,8 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
+    input a: UInt<3>
+    input b: UInt<3>
     input en: UInt<1>
     wire x: UInt
     when en :
@@ -1695,8 +1695,8 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
+    input a: UInt<3>
+    input b: UInt<3>
     input en: UInt<1>
     wire x: UInt
     when en :
@@ -1715,10 +1715,10 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
-    input c: UInt
-    input d: UInt
+    input a: UInt<3>
+    input b: UInt<3>
+    input c: UInt<3>
+    input d: UInt<3>
     input c1: UInt<1>
     input c2: UInt<1>
     input c3: UInt<1>
@@ -1743,10 +1743,10 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
-    input c: UInt
-    input d: UInt
+    input a: UInt<3>
+    input b: UInt<3>
+    input c: UInt<3>
+    input d: UInt<3>
     input c1: UInt<1>
     input c2: UInt<1>
     input c3: UInt<1>
@@ -1852,8 +1852,8 @@ FIRRTL version 4.0.0
 circuit MyModule :
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
+    input a: UInt<3>
+    input b: UInt<3>
     input en: UInt<1>
     input clk : Clock
     when en :
@@ -1880,7 +1880,7 @@ circuit MyModule:
   ;; snippetbegin
   module MyModule :
   input en: UInt<1>
-  input a: UInt
+  input a: UInt<3>
   wire w: UInt
   when en :
     connect w, a
@@ -2576,17 +2576,17 @@ circuit Refs:
   ;; snippetbegin
   module Refs:
     input clock:  Clock
-    output a : Probe<{x: UInt, y: UInt}> ; read-only ref. to wire 'p'
-    output b : RWProbe<UInt> ; force-able ref. to node 'q', inferred width.
-    output c : Probe<UInt> ; read-only ref. to register 'r'
+    output a : Probe<{x: UInt<1>, y: UInt<2>}> ; read-only ref. to wire 'p'
+    output b : RWProbe<UInt<1>> ; force-able ref. to node 'q', inferred width.
+    output c : Probe<UInt<3>> ; read-only ref. to register 'r'
     output d : Probe<Clock> ; ref. to input clock port
 
-    wire p : {x: UInt, flip y : UInt}
+    wire p : {x: UInt<1>, flip y : UInt<2>}
     define a = probe(p) ; probe is passive
     wire q: UInt<1>
     connect q, UInt<1>(0)
     define b = rwprobe(q)
-    reg r: UInt, clock
+    reg r: UInt<3>, clock
     define c = probe(r)
     define d = probe(clock)
   ;; snippetend
@@ -2599,11 +2599,11 @@ FIRRTL version 4.0.0
 circuit Foo:
   ;; snippetbegin
   module Foo:
-    input x : UInt
-    output y : { x: UInt, p: Probe<UInt> }
-    output z : Probe<UInt>[2]
+    input x : UInt<3>
+    output y : { x: UInt<3>, p: Probe<UInt<3>> }
+    output z : Probe<UInt<3>>[2]
 
-    wire w : UInt
+    wire w : UInt<3>
     connect w, x
     connect y.x, w
 
@@ -3081,10 +3081,10 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input a: UInt
-    input b: UInt
+    input a: UInt<3>
+    input b: UInt<3>
     input sel: UInt<1>
-    output c: UInt
+    output c: UInt<3>
     connect c, mux(sel, a, b)
   ;; snippetend
 ```
@@ -3194,7 +3194,7 @@ circuit Bar:
     ; ...
 
   module Bar :
-    output x : UInt
+    output x : UInt<3>
 
     inst f of Foo
     connect x, read(f.p) ; indirectly access the probed data
@@ -3212,7 +3212,7 @@ circuit Bar:
     ; ...
 
   module Bar :
-    output x : UInt
+    output x : UInt<3>
 
     inst f of Foo
     connect x, read(f.p.b) ; indirectly access the probed data
@@ -3252,8 +3252,8 @@ FIRRTL version 4.0.0
 circuit MyModule:
   ;; snippetbegin
   module MyModule :
-    input in: UInt
-    output r : Probe<UInt>
+    input in: UInt<5>
+    output r : Probe<UInt<5>>
 
     define r = probe(in)
   ;; snippetend
@@ -3969,11 +3969,11 @@ FIRRTL version 4.0.0
 ;; snippetbegin
 circuit Top : @[myfile.txt 14:8]
   public module Top : @[myfile.txt 15:2]
-    output out: UInt @[myfile.txt 16:3]
+    output out: UInt<3> @[myfile.txt 16:3]
     input b: UInt<32> @[myfile.txt 17:3]
     input c: UInt<1> @[myfile.txt 18:3]
     input d: UInt<16> @[myfile.txt 19:3]
-    wire a: UInt @[myfile.txt 21:8]
+    wire a: UInt<2> @[myfile.txt 21:8]
     when c : @[myfile.txt 24:8]
       connect a, b @[myfile.txt 27:16]
     else :
